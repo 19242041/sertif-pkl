@@ -1,176 +1,146 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-export default function AuthenticatedLayout({ header, children }) {
+const navigationItems = [
+    { label: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
+    { label: 'Data Peserta PKL', href: route('peserta-pkl.index'), routeName: 'peserta-pkl.*' },
+    { label: 'Upload Sertifikat', href: route('sertifikat.index'), routeName: 'sertifikat.*' },
+    { label: 'Laporan', href: route('laporan.index'), routeName: 'laporan.*' },
+    { label: 'Pengaturan', href: route('pengaturan.edit'), routeName: 'pengaturan.*' },
+];
+
+export default function AuthenticatedLayout({ breadcrumbs = [], children }) {
     const user = usePage().props.auth.user;
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const activeLabel = useMemo(() => {
+        if (!breadcrumbs.length) {
+            return 'Dashboard';
+        }
+
+        return breadcrumbs[breadcrumbs.length - 1].label;
+    }, [breadcrumbs]);
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
+        <div className="min-h-screen bg-[#F4F6F9] text-[#1B2733]">
+            <aside className="fixed inset-y-0 left-0 z-40 hidden w-[280px] flex-col border-r border-white/10 bg-[linear-gradient(180deg,#0E2A47_0%,#081B30_100%)] text-white shadow-[10px_0_30px_rgba(8,27,48,0.18)] lg:flex">
+                <div className="border-b border-white/10 px-6 py-5">
+                    <Link href={route('dashboard')} className="flex items-center gap-3">
+                        <img
+                            src="/images/logo-disnakertrans.png"
+                            alt="Logo Disnakertrans"
+                            className="h-11 w-auto object-contain"
+                        />
+                        <div>
+                            <p className="font-display text-[24px] font-extrabold tracking-[0.08em] text-white">
+                                SIMPATIK
+                            </p>
+                            <p className="mt-1 max-w-[190px] text-[11px] leading-4 text-white/65">
+                                Sistem pencatatan peserta PKL dan arsip sertifikat magang.
+                            </p>
+                        </div>
+                    </Link>
+                </div>
+
+                <nav className="flex-1 px-4 py-5">
+                    <div className="space-y-2">
+                        {navigationItems.map((item) => {
+                            const isActive = route().current(item.routeName);
+
+                            return (
+                                <Link
+                                    key={item.label}
+                                    href={item.href}
+                                    className={[
+                                        'flex items-center rounded-2xl px-4 py-3 text-[13.5px] font-semibold transition',
+                                        isActive
+                                            ? 'bg-[#1B63B0] text-white shadow-[0_10px_24px_rgba(27,99,176,0.28)]'
+                                            : 'text-white/78 hover:bg-white/8 hover:text-white',
+                                    ].join(' ')}
+                                >
+                                    <span className="h-2.5 w-2.5 rounded-full bg-current opacity-70" />
+                                    <span className="ms-3">{item.label}</span>
                                 </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
+
+                <div className="border-t border-white/10 p-4">
+                    <Link
+                        href={route('logout')}
+                        method="post"
+                        as="button"
+                        className="flex w-full items-center rounded-2xl px-4 py-3 text-left text-[13.5px] font-semibold text-[#FBEAE9] transition hover:bg-white/8"
+                    >
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#C0433D]" />
+                        <span className="ms-3">Logout</span>
+                    </Link>
+                </div>
+            </aside>
+
+            <div className="lg:pl-[280px]">
+                <header className="sticky top-0 z-30 border-b border-[#E4E9F0] bg-white/92 backdrop-blur-xl">
+                    <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                        <div>
+                            <div className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-[#94A0B3]">
+                                {breadcrumbs.length ? breadcrumbs.map((crumb) => crumb.label).join(' / ') : activeLabel}
                             </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
+                            <div className="mt-1 font-display text-[20px] font-extrabold text-[#0E2A47]">
+                                SIMPATIK
                             </div>
                         </div>
 
-                        <div className="-me-2 flex items-center sm:hidden">
+                        <div className="relative">
                             <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
+                                type="button"
+                                onClick={() => setShowMobileMenu((current) => !current)}
+                                className="flex items-center gap-3 rounded-2xl border border-[#E4E9F0] bg-white px-3.5 py-2.5 text-left shadow-sm transition hover:border-[#C9D3E0]"
                             >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8F1FB] text-[13px] font-bold text-[#1B63B0]">
+                                    {user.name?.charAt(0)?.toUpperCase()}
+                                </div>
+                                <div className="hidden sm:block">
+                                    <p className="text-[13px] font-semibold text-[#1B2733]">{user.name}</p>
+                                    <p className="text-[11.5px] text-[#657085]">{user.email}</p>
+                                </div>
+                                <svg className="h-4 w-4 text-[#657085]" viewBox="0 0 20 20" fill="currentColor">
                                     <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
+                                        fillRule="evenodd"
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clipRule="evenodd"
                                     />
                                 </svg>
                             </button>
+
+                            {showMobileMenu && (
+                                <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-[#E4E9F0] bg-white shadow-[0_20px_50px_rgba(8,27,48,0.12)]">
+                                    <div className="border-b border-[#E4E9F0] px-4 py-3">
+                                        <div className="text-[13px] font-semibold text-[#1B2733]">{user.name}</div>
+                                        <div className="text-[11.5px] text-[#657085]">{user.email}</div>
+                                    </div>
+                                    <Link
+                                        href={route('pengaturan.edit')}
+                                        className="block px-4 py-3 text-[13px] text-[#1B2733] transition hover:bg-[#F7F9FC]"
+                                    >
+                                        Pengaturan
+                                    </Link>
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        className="block w-full px-4 py-3 text-left text-[13px] text-[#C0433D] transition hover:bg-[#FBEAE9]"
+                                    >
+                                        Logout
+                                    </Link>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                </div>
-
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
                     </div>
                 </header>
-            )}
 
-            <main>{children}</main>
+                <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+            </div>
         </div>
     );
 }

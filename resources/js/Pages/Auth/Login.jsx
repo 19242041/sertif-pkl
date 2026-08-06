@@ -26,7 +26,7 @@ export default function Login({ status }) {
 
             <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl items-center justify-center">
                 <div className="grid w-full items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
-                    {/* KIRI: satu titik fokus branding (logo + nama), lalu penjelasan manfaat kerja */}
+                    {/* KIRI: Branding dan Informasi */}
                     <div className="hidden max-w-[640px] text-white lg:block">
                         <div className="mb-8 flex items-center gap-3.5">
                             <img
@@ -53,7 +53,6 @@ export default function Login({ status }) {
                             magang, dan menyimpan sertifikat secara terpusat.
                         </p>
 
-                        {/* Kartu fitur — copy fokus ke manfaat kerja, bukan deskripsi UI */}
                         <div className="mt-9 grid max-w-[640px] grid-cols-3 gap-4">
                             <div className="rounded-[18px] border border-white/10 bg-white/7 p-5 backdrop-blur-sm">
                                 <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-lg bg-[#1B63B0]/22 text-[13px] font-bold text-[#D7E8FB]">
@@ -85,10 +84,9 @@ export default function Login({ status }) {
                         </div>
                     </div>
 
-                    {/* KANAN: kartu login — logo kecil netral, nama aplikasi cukup 1x di sini */}
+                    {/* KANAN: Form Login */}
                     <div className="mx-auto w-full max-w-[400px] rounded-[24px] border border-white/55 bg-white/96 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
                         <div className="flex flex-col items-center text-center">
-                            {/* aksen 3 warna brand, bentuk garis tipis — bukan dot besar yang mirip carousel */}
                             <div className="flex h-[3px] w-14 overflow-hidden rounded-full">
                                 <span className="flex-1 bg-[#1B63B0]" />
                                 <span className="flex-1 bg-[#2E8B4E]" />
@@ -109,11 +107,11 @@ export default function Login({ status }) {
                             </div>
                         )}
 
-                        <form onSubmit={submit} className="mt-6 space-y-6">
+                        <form onSubmit={submit} className="mt-6">
                             <div>
                                 <label
                                     htmlFor="email"
-                                    className="mb-2 block text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#1B2733]"
+                                    className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.08em] text-[#1B2733]"
                                 >
                                     Username atau Email
                                 </label>
@@ -128,17 +126,19 @@ export default function Login({ status }) {
                                     className="block w-full rounded-[9px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] text-[#1B2733] outline-none transition placeholder:text-[#94A0B3] focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12"
                                     placeholder="Masukkan username atau email"
                                 />
-                                {errors.email && (
-                                    <p className="mt-1.5 text-sm font-medium text-[#C0433D]">
-                                        {errors.email}
-                                    </p>
-                                )}
+                                <div className="h-6 pt-1">
+                                    {errors.email && (
+                                        <p className="text-[12px] font-medium text-[#C0433D]">
+                                            {errors.email}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div>
                                 <label
                                     htmlFor="password"
-                                    className="mb-2 block text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#1B2733]"
+                                    className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.08em] text-[#1B2733]"
                                 >
                                     Password
                                 </label>
@@ -152,25 +152,24 @@ export default function Login({ status }) {
                                     className="block w-full rounded-[9px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] text-[#1B2733] outline-none transition placeholder:text-[#94A0B3] focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12"
                                     placeholder="Masukkan password"
                                 />
-                                {errors.password && (
-                                    <p className="mt-1.5 text-sm font-medium text-[#C0433D]">
-                                        {errors.password}
-                                    </p>
-                                )}
+                                <div className="h-6 pt-1">
+                                    {errors.password && (
+                                        <p className="text-[12px] font-medium text-[#C0433D]">
+                                            {errors.password}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="inline-flex w-full items-center justify-center rounded-[10px] bg-[#1B63B0] px-4 py-[10px] text-[13.5px] font-bold text-white shadow-[0_12px_24px_rgba(27,99,176,0.22)] transition duration-150 hover:bg-[#16579b] focus:outline-none focus:ring-4 focus:ring-[#1B63B0]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="mt-2 inline-flex w-full items-center justify-center rounded-[10px] bg-[#1B63B0] px-4 py-[10px] text-[13.5px] font-bold text-white shadow-[0_12px_24px_rgba(27,99,176,0.22)] transition duration-150 hover:bg-[#16579b] focus:outline-none focus:ring-4 focus:ring-[#1B63B0]/20 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Masuk
                             </button>
                         </form>
 
-                        {/* Catatan: kotak bantuan lama yang menampilkan username/email admin asli
-                           sudah dihapus karena itu expose kredensial ke siapa pun yang buka halaman
-                           login tanpa perlu login dulu. Ganti dengan kalimat umum saja. */}
                         <p className="mt-6 text-center text-[11.5px] leading-5 text-[#94A0B3]">
                             Akses halaman ini terbatas untuk admin yang berwenang.
                         </p>
