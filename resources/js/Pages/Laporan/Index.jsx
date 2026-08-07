@@ -6,7 +6,7 @@ export default function Index({ summary }) {
         ['Total Peserta', summary.total_peserta],
         ['PKL Aktif', summary.aktif],
         ['PKL Selesai', summary.selesai],
-        ['Sertifikat Dibuat', summary.sertifikat_terbit],
+        ['Sertifikat Upload', summary.sertifikat_upload],
     ];
 
     return (
