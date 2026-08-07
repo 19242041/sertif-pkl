@@ -48,6 +48,6 @@ class PesertaPkl extends Model
 
     public function sertifikatTerbaru(): HasOne
     {
-        return $this->hasOne(Sertifikat::class, 'peserta_pkl_id')->latestOfMany('uploaded_at');
+        return $this->hasOne(Sertifikat::class, 'peserta_pkl_id')->latestOfMany('generated_at');
     }
 }

@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 const navigationItems = [
     { label: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
     { label: 'Data Peserta PKL', href: route('peserta-pkl.index'), routeName: 'peserta-pkl.*' },
-    { label: 'Upload Sertifikat', href: route('sertifikat.index'), routeName: 'sertifikat.*' },
+    { label: 'Terbitkan Sertifikat', href: route('sertifikat.index'), routeName: 'sertifikat.index' },
+    { label: 'Kelola Template Sertifikat', href: route('sertifikat.template'), routeName: 'sertifikat.template' },
     { label: 'Laporan', href: route('laporan.index'), routeName: 'laporan.*' },
     { label: 'Pengaturan', href: route('pengaturan.edit'), routeName: 'pengaturan.*' },
 ];

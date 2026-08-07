@@ -1,4 +1,5 @@
 ## 1. Latar Belakang
+ 
 UPTD Pengawasan Ketenagakerjaan Wilayah II Karawang secara rutin menerima siswa/mahasiswa yang melaksanakan Praktik Kerja Lapangan (PKL/magang). Saat ini pencatatan data peserta PKL dan pengarsipan sertifikat magang dilakukan secara manual (dokumen fisik atau spreadsheet terpisah), sehingga rawan data hilang, sulit dicari, dan tidak ada riwayat terpusat.
  
 **SI-PKL** dibangun sebagai sistem informasi berbasis web agar admin UPTD dapat mencatat, mengelola, dan mengarsipkan data peserta PKL beserta sertifikat magang mereka dalam satu tempat, lengkap dengan ringkasan dashboard dan laporan.
@@ -95,16 +96,13 @@ Aplikasi ini **hanya digunakan oleh 1 jenis pengguna: Admin UPTD**. Tidak ada po
 - FR-14: Admin dapat memfilter data berdasarkan status.
 - FR-15: Daftar data peserta ditampilkan dengan pagination (menampilkan jumlah data per halaman, mis. 5–10 baris per halaman).
 - FR-16: Admin dapat membuka halaman Detail Peserta yang menampilkan seluruh data pribadi, data PKL, foto, status, dan informasi sertifikat (nomor, tanggal, file) dari satu peserta. Dari halaman ini admin dapat langsung mengubah (Edit) atau menghapus (Hapus) data peserta tersebut.
-### 7.4 Manajemen Sertifikat
-- FR-17: Sertifikat dikelola melalui halaman tersendiri ("Upload Sertifikat"), meliputi:
-  - Pilih peserta (dropdown/pencarian)
-  - Nomor sertifikat
-  - Tanggal sertifikat
-  - File sertifikat (drag & drop atau klik untuk memilih file), format PDF, ukuran maksimal 5MB
-- FR-18: Setelah diunggah, sertifikat tercatat dalam tabel "Riwayat Sertifikat" yang menampilkan nama peserta, nomor sertifikat, tanggal, dan aksi lihat/unduh.
-- FR-19: Sistem menampilkan indikator status sertifikat ("Sudah Upload"/"Belum Upload") pada daftar data peserta.
-- FR-20: Admin dapat melihat pratinjau atau mengunduh sertifikat yang sudah diunggah dari daftar data, halaman detail peserta, maupun riwayat sertifikat.
-- FR-21: Admin dapat menghapus atau mengganti file sertifikat yang sudah diunggah.
+### 7.4 Manajemen Sertifikat (Generate Otomatis dari Template)
+- FR-17: Admin mengunggah **1 file template desain sertifikat kosong** (JPG/PNG, tanpa teks nama/tanggal) melalui halaman "Template Sertifikat". Template ini dipakai ulang untuk semua peserta, bukan diunggah satu-satu per peserta.
+- FR-17a: Admin dapat mengatur posisi (koordinat X/Y), ukuran font, dan perataan teks untuk 3 elemen yang akan ditimpakan otomatis di atas template: Nama Peserta, Periode PKL, dan Tanggal (baris di bawah tanda tangan Kepala UPTD). Pengaturan ini disimpan dan berlaku untuk seluruh proses generate berikutnya.
+- FR-18: Di halaman "Upload Sertifikat" (fungsinya berubah jadi "Generate Sertifikat"), admin memilih peserta, mengisi nomor sertifikat dan tanggal sertifikat, lalu menekan tombol "Generate Sertifikat". Sistem otomatis menimpakan nama peserta, periode PKL (dari data tanggal mulai–selesai peserta), dan tanggal ke posisi yang sudah diatur di atas template, lalu menyimpan hasilnya sebagai file sertifikat milik peserta tersebut.
+- FR-19: Hasil generate tercatat dalam tabel "Riwayat Sertifikat" yang menampilkan nama peserta, nomor sertifikat, tanggal, dan aksi lihat/unduh — sama seperti sebelumnya, hanya sumber filenya kini hasil generate otomatis, bukan unggahan manual.
+- FR-20: Sistem menampilkan indikator status sertifikat ("Sudah Dibuat"/"Belum Dibuat") pada daftar data peserta.
+- FR-21: Admin dapat men-generate ulang (replace) sertifikat seorang peserta apabila data berubah atau ada kesalahan, serta menghapus hasil sertifikat yang sudah dibuat.
 ### 7.5 Laporan
 - FR-22: Admin dapat melihat halaman Laporan berisi rekap jumlah peserta PKL berdasarkan periode (mis. per bulan/semester/tahun) dan status.
 - FR-23: Admin dapat mengekspor laporan rekap peserta PKL ke format Excel dan/atau PDF.
@@ -146,8 +144,21 @@ Aplikasi ini **hanya digunakan oleh 1 jenis pengguna: Admin UPTD**. Tidak ada po
 | peserta_id | FK → PesertaPKL | |
 | nomor_sertifikat | String | |
 | tanggal_sertifikat | Date | |
-| file_path | String | Path/URL file PDF sertifikat |
-| uploaded_at | Timestamp | |
+| file_path | String | Path/URL file hasil generate (gambar/PDF) |
+| generated_at | Timestamp | Waktu sertifikat dibuat/di-generate ulang |
+ 
+**Entity: TemplateSertifikat**
+ 
+| Field | Tipe | Keterangan |
+|---|---|---|
+| id | UUID/Int | Primary key |
+| file_path | String | Path file desain template kosong (JPG/PNG) |
+| posisi_nama_x / posisi_nama_y | Integer | Koordinat teks Nama Peserta |
+| posisi_periode_x / posisi_periode_y | Integer | Koordinat teks Periode PKL |
+| posisi_tanggal_x / posisi_tanggal_y | Integer | Koordinat teks Tanggal (bawah tanda tangan Kepala UPTD) |
+| font_size | Integer | Ukuran font default untuk semua teks (bisa dipecah per elemen bila diperlukan) |
+| alignment | Enum | Kiri, Tengah, Kanan |
+| updated_at | Timestamp | |
  
 **Entity: Admin**
  

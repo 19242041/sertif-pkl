@@ -1,4 +1,4 @@
- ## 1. Prinsip Desain
+## 1. Prinsip Desain
  
 Aplikasi ini adalah **alat kerja internal** untuk 1 admin, bukan situs publik. Prioritas desain:
  
@@ -70,7 +70,8 @@ Aplikasi ini adalah **alat kerja internal** untuk 1 admin, bukan situs publik. P
 2. **Dashboard** — sapaan admin, 5 kartu statistik warna-warni, grafik garis (peserta per bulan) + grafik donut (distribusi status).
 3. **Data Peserta PKL** — tabel dengan kolom No, Nama, Asal Sekolah/Kampus, Jurusan, Periode, Status, Sertifikat, Aksi (lihat/ubah/hapus); dilengkapi search bar, filter, dan pagination di bagian bawah.
 4. **Tambah/Ubah Peserta** — form 2 kolom dikelompokkan per bagian (Data Pribadi, Data Institusi, Data PKL), termasuk upload foto.
-5. **Upload Sertifikat** — form pilih peserta, nomor sertifikat, tanggal, drag & drop file PDF; di bawahnya tabel Riwayat Sertifikat.
+5. **Generate Sertifikat** (dulu "Upload Sertifikat") — form pilih peserta, nomor sertifikat, tanggal, tombol "Generate Sertifikat" (bukan lagi upload file manual); di bawahnya tabel Riwayat Sertifikat berisi hasil yang sudah di-generate.
+5a. **Template Sertifikat** — halaman untuk admin mengunggah 1 desain sertifikat kosong (JPG/PNG) dan mengatur posisi 3 elemen teks yang akan ditimpakan otomatis: Nama Peserta, Periode PKL, dan Tanggal (baris di bawah tanda tangan Kepala UPTD). Preview template tampil besar di tengah/kiri, panel pengaturan posisi (koordinat X/Y, ukuran font, perataan) di kanan, dengan live preview teks contoh di atas gambar template.
 6. **Detail Peserta** — foto/avatar besar di kiri, data pribadi & PKL di kanan dalam format label-nilai, bagian sertifikat (nomor, tanggal, file unduh) di bawah, tombol Edit/Hapus di header.
 7. **Laporan** — filter rentang tanggal/periode, ringkasan rekap, tombol ekspor Excel/PDF.
 8. **Pengaturan** — form ubah profil admin (nama, username, password).
@@ -88,7 +89,7 @@ Aplikasi ini adalah **alat kerja internal** untuk 1 admin, bukan situs publik. P
 ### 5.3 Badge Status
 - Bentuk pil (`border-radius: 999px`), dot kecil + teks status.
 - Warna latar soft + warna teks solid sesuai token status (Aktif/Selesai/Berhenti).
-- Badge serupa juga dipakai untuk status sertifikat: "Sudah Upload" (hijau/emas) vs "Belum Upload" (merah).
+- Badge serupa juga dipakai untuk status sertifikat: "Sudah Dibuat" (hijau/emas) vs "Belum Dibuat" (merah).
 ### 5.4 Tabel Data & Pagination
 - Header tabel: background abu sangat muda (`#F7F9FC`), teks uppercase kecil, bold, warna `ink-muted`.
 - Baris: hover state halus (`#FAFBFD`), border bawah tipis antar baris, nomor urut di kolom pertama.
@@ -103,10 +104,15 @@ Aplikasi ini adalah **alat kerja internal** untuk 1 admin, bukan situs publik. P
 - Layout 2 kolom, dikelompokkan per bagian dengan judul kecil (Data Pribadi, Data Institusi, Data PKL) — membantu admin mengisi form panjang tanpa kehilangan konteks.
 - Field mencakup: nama lengkap, NIS/NIM, jenis kelamin (select), tempat & tanggal lahir, asal sekolah/kampus, jurusan, pembimbing sekolah, tanggal mulai & selesai PKL, no HP, email, status (select), keterangan (textarea), dan upload foto peserta (preview bulat/avatar setelah dipilih).
 - Tombol "Simpan" primary di kanan atas/header form, "Kembali" di kiri.
-### 5.7 Upload Sertifikat (Drag & Drop)
-- Area drop zone besar dengan border putus-putus, ikon upload cloud di tengah, teks instruksi "Drag & drop file PDF di sini atau klik untuk memilih file", keterangan ukuran maksimal.
-- Setelah file dipilih, tampilkan nama file & ukuran sebagai konfirmasi sebelum submit.
-- Tabel "Riwayat Sertifikat" di bawah form: kolom No, Nama Peserta, Nomor Sertifikat, Tanggal, ikon File (PDF), aksi unduh.
+### 5.7 Generate Sertifikat
+- Form ringkas: pilih peserta (dropdown/search), nomor sertifikat, tanggal sertifikat, lalu tombol primary "Generate Sertifikat" (menggantikan drop zone upload file).
+- Setelah digenerate, tampilkan preview hasil sertifikat (gambar) sebelum admin menutup form/lanjut ke peserta berikutnya.
+- Tabel "Riwayat Sertifikat" di bawah form: kolom No, Nama Peserta, Nomor Sertifikat, Tanggal, ikon File, aksi unduh — isinya hasil generate, bukan file upload manual.
+### 5.7a Template Sertifikat
+- Panel kiri/tengah: preview besar template desain sertifikat yang sedang aktif, dengan overlay 3 kotak penanda posisi (Nama Peserta, Periode PKL, Tanggal) yang bisa digeser atau diatur lewat input koordinat.
+- Panel kanan: form upload/ganti file template (drag & drop, border putus-putus, ikon upload cloud — pola yang sama seperti drop zone lama), dan input numerik untuk posisi X/Y, ukuran font, serta pilihan perataan teks (kiri/tengah/kanan) untuk tiap elemen.
+- Tombol primary "Simpan Pengaturan Posisi" di bagian bawah panel kanan.
+- Live preview: saat admin mengubah angka posisi, teks contoh ("Nama Peserta Contoh", "01 Januari 2025 - 28 Februari 2025", "Karawang, 28 Februari 2025") langsung bergeser di atas preview template sebelah kiri.
 ### 5.8 Halaman Detail Peserta
 - Foto/avatar bulat besar (atau inisial jika tanpa foto) di kolom kiri, nama dan badge status di bawahnya.
 - Data pribadi & PKL ditampilkan sebagai daftar label-nilai dua kolom di kanan.

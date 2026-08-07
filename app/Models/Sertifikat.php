@@ -17,14 +17,14 @@ class Sertifikat extends Model
         'nomor_sertifikat',
         'tanggal_sertifikat',
         'file_path',
-        'uploaded_at',
+        'generated_at',
     ];
 
     protected function casts(): array
     {
         return [
             'tanggal_sertifikat' => 'date',
-            'uploaded_at' => 'datetime',
+            'generated_at' => 'datetime',
         ];
     }
 

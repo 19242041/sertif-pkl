@@ -122,7 +122,7 @@ export default function Index({ peserta, filters }) {
                                         </td>
                                         <td className="px-4 py-4">
                                             <span className={`rounded-full px-3 py-1 text-[12px] font-semibold ${certificateClass(item.sertifikat)}`}>
-                                                {item.sertifikat ? 'Sudah Upload' : 'Belum Upload'}
+                                                {item.sertifikat ? 'Sudah Dibuat' : 'Belum Dibuat'}
                                             </span>
                                         </td>
                                         <td className="px-4 py-4">

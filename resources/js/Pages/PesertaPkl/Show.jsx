@@ -107,7 +107,7 @@ export default function Show({ peserta }) {
                                         </div>
                                     </div>
                                 )) : (
-                                    <p className="text-[13.5px] text-[#657085]">Belum ada sertifikat yang diunggah.</p>
+                                    <p className="text-[13.5px] text-[#657085]">Belum ada sertifikat yang dibuat.</p>
                                 )}
                             </div>
                         </div>

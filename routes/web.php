@@ -16,7 +16,9 @@ Route::middleware('auth')->group(function () {
         ->parameters(['peserta-pkl' => 'pesertaPkl']);
 
     Route::get('/sertifikat', [SertifikatController::class, 'index'])->name('sertifikat.index');
+    Route::get('/sertifikat/template', [SertifikatController::class, 'template'])->name('sertifikat.template');
     Route::post('/sertifikat', [SertifikatController::class, 'store'])->name('sertifikat.store');
+    Route::post('/sertifikat/template', [SertifikatController::class, 'storeTemplate'])->name('sertifikat.template.store');
     Route::delete('/sertifikat/{sertifikat}', [SertifikatController::class, 'destroy'])->name('sertifikat.destroy');
     Route::get('/sertifikat/{sertifikat}/download', [SertifikatController::class, 'download'])->name('sertifikat.download');
 
@@ -25,7 +27,8 @@ Route::middleware('auth')->group(function () {
             'total_peserta' => \App\Models\PesertaPkl::count(),
             'aktif' => \App\Models\PesertaPkl::where('status', 'Aktif')->count(),
             'selesai' => \App\Models\PesertaPkl::where('status', 'Selesai')->count(),
-            'sertifikat_upload' => \App\Models\Sertifikat::count(),
+            'sertifikat_terbit' => \App\Models\Sertifikat::count(),
+            'belum_buat' => \App\Models\PesertaPkl::doesntHave('sertifikats')->count(),
         ],
     ]))->name('laporan.index');
 

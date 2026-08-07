@@ -27,22 +27,22 @@ class DashboardController extends Controller
         $totalPeserta = PesertaPkl::count();
         $aktif = PesertaPkl::where('status', 'Aktif')->count();
         $selesai = PesertaPkl::where('status', 'Selesai')->count();
-        $sertifikatUpload = Sertifikat::count();
-        $belumUpload = PesertaPkl::doesntHave('sertifikats')->count();
+        $sertifikatTerbit = Sertifikat::count();
+        $belumBuat = PesertaPkl::doesntHave('sertifikats')->count();
 
         return Inertia::render('Dashboard', [
             'summary' => [
                 'total_peserta' => $totalPeserta,
                 'aktif' => $aktif,
                 'selesai' => $selesai,
-                'sertifikat_upload' => $sertifikatUpload,
-                'belum_upload' => $belumUpload,
+                'sertifikat_terbit' => $sertifikatTerbit,
+                'belum_buat' => $belumBuat,
             ],
             'monthlyCounts' => array_values($monthlyCounts),
             'statusChart' => [
                 ['label' => 'Aktif', 'value' => $aktif, 'color' => '#1B63B0'],
                 ['label' => 'Selesai', 'value' => $selesai, 'color' => '#2E8B4E'],
-                ['label' => 'Belum Upload', 'value' => $belumUpload, 'color' => '#C0433D'],
+                ['label' => 'Belum Dibuat', 'value' => $belumBuat, 'color' => '#C0433D'],
             ],
             'adminName' => $request->user()?->name,
             'currentYear' => $year,

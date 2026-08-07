@@ -87,7 +87,7 @@ class PesertaPklController extends Controller
 
     public function show(PesertaPkl $pesertaPkl): Response
     {
-        $pesertaPkl->load(['sertifikats' => fn ($query) => $query->latest('uploaded_at')]);
+        $pesertaPkl->load(['sertifikats' => fn ($query) => $query->latest('generated_at')]);
 
         return Inertia::render('PesertaPkl/Show', [
             'peserta' => [
@@ -113,7 +113,7 @@ class PesertaPklController extends Controller
                     'nomor_sertifikat' => $sertifikat->nomor_sertifikat,
                     'tanggal_sertifikat' => optional($sertifikat->tanggal_sertifikat)->format('d M Y'),
                     'file_path' => $sertifikat->file_path,
-                    'uploaded_at' => optional($sertifikat->uploaded_at)->format('d M Y H:i'),
+                    'generated_at' => optional($sertifikat->generated_at)->format('d M Y H:i'),
                 ]),
             ],
         ]);
