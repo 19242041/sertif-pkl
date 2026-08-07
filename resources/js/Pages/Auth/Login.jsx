@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -46,11 +46,11 @@ export default function Login({ status }) {
                         </div>
 
                         <h1 className="font-display max-w-[560px] text-[32px] font-extrabold leading-[1.15] text-white">
-                            Sistem pencatatan peserta PKL dan arsip sertifikat magang.
+                            Sistem pencatatan peserta PKL dan arsip sertifikat.
                         </h1>
                         <p className="mt-4 max-w-[520px] text-[14.5px] leading-6 text-white/72">
                             Digunakan untuk mencatat data peserta PKL, memantau status
-                            magang, dan menyimpan sertifikat secara terpusat.
+                            PKL, dan menyimpan sertifikat secara terpusat.
                         </p>
 
                         <div className="mt-9 grid max-w-[640px] grid-cols-3 gap-4">
@@ -78,7 +78,7 @@ export default function Login({ status }) {
                                 </div>
                                 <p className="text-[15px] font-bold text-white">Sertifikat digital</p>
                                 <p className="mt-1.5 text-[13px] leading-6 text-white/70">
-                                    Arsip sertifikat magang tersimpan aman, tanpa dokumen fisik.
+                                    Arsip sertifikat tersimpan aman, tanpa dokumen fisik.
                                 </p>
                             </div>
                         </div>
@@ -136,12 +136,20 @@ export default function Login({ status }) {
                             </div>
 
                             <div>
-                                <label
-                                    htmlFor="password"
-                                    className="mb-1.5 block text-[12px] font-bold uppercase tracking-[0.08em] text-[#1B2733]"
-                                >
-                                    Password
-                                </label>
+                                <div className="mb-1.5 flex items-center justify-between">
+                                    <label
+                                        htmlFor="password"
+                                        className="block text-[12px] font-bold uppercase tracking-[0.08em] text-[#1B2733]"
+                                    >
+                                        Password
+                                    </label>
+                                    <Link
+                                        href={route('password.request')}
+                                        className="text-[12px] font-semibold text-[#1B63B0] hover:underline"
+                                    >
+                                        Lupa kata sandi?
+                                    </Link>
+                                </div>
                                 <input
                                     id="password"
                                     type="password"

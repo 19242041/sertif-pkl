@@ -5,7 +5,7 @@ const navigationItems = [
     { label: 'Dashboard', href: route('dashboard'), routeName: 'dashboard' },
     { label: 'Data Peserta PKL', href: route('peserta-pkl.index'), routeName: 'peserta-pkl.*' },
     { label: 'Terbitkan Sertifikat', href: route('sertifikat.index'), routeName: 'sertifikat.index' },
-    { label: 'Kelola Template Sertifikat', href: route('sertifikat.template'), routeName: 'sertifikat.template' },
+    { label: 'Kelola Sertifikat', href: route('sertifikat.template'), routeName: 'sertifikat.template' },
     { label: 'Laporan', href: route('laporan.index'), routeName: 'laporan.*' },
     { label: 'Pengaturan', href: route('pengaturan.edit'), routeName: 'pengaturan.*' },
 ];
@@ -37,7 +37,7 @@ export default function AuthenticatedLayout({ breadcrumbs = [], children }) {
                                 SIMPATIK
                             </p>
                             <p className="mt-1 max-w-[190px] text-[11px] leading-4 text-white/65">
-                                Sistem pencatatan peserta PKL dan arsip sertifikat magang.
+                                Sistem pencatatan peserta PKL dan arsip sertifikat.
                             </p>
                         </div>
                     </Link>
