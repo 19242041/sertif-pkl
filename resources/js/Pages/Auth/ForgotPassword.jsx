@@ -49,7 +49,7 @@ export default function ForgotPassword({ status }) {
                                 <span className="flex-1 bg-[#E8A712]" />
                             </div>
 
-                            <h2 className="font-display mt-4 text-[24px] font-extrabold tracking-[0.02em] text-[#0E2A47]">
+                            <h2 className="font-display mt-4 text-[24px] font-extrabold tracking-[0.02em] text-[#FFFFFF]">
                                 Kirim Kode Reset
                             </h2>
                             <p className="mt-1.5 max-w-xs text-[13px] leading-5 text-[#657085]">

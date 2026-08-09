@@ -7,16 +7,23 @@ use App\Http\Requests\Sertifikat\StoreTemplateSertifikatRequest;
 use App\Models\PesertaPkl;
 use App\Models\Sertifikat;
 use App\Models\TemplateSertifikat;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SertifikatController extends Controller
 {
+    private const MIN_FONT_SIZE = 10;
+
+    private const MAX_FONT_SIZE = 40;
+
+    /**
+     * Halaman "Terbitkan Sertifikat" beserta riwayat sertifikat.
+     */
     public function index(Request $request): Response
     {
         $template = TemplateSertifikat::query()->where('is_active', true)->latest()->first();
@@ -40,24 +47,18 @@ class SertifikatController extends Controller
             ]);
 
         return Inertia::render('Sertifikat/Generate', [
-                'pesertaOptions' => PesertaPkl::query()->orderBy('nama')->get(['id', 'nama', 'asal_institusi', 'tanggal_mulai', 'tanggal_selesai']),
+            'pesertaOptions' => PesertaPkl::query()
+                ->orderBy('nama')
+                ->get(['id', 'nama', 'asal_institusi', 'tanggal_mulai', 'tanggal_selesai'])
+                ->map(fn (PesertaPkl $item) => [
+                    'id' => $item->id,
+                    'nama' => $item->nama,
+                    'asal_institusi' => $item->asal_institusi,
+                    'tanggal_mulai' => optional($item->tanggal_mulai)->format('Y-m-d'),
+                    'tanggal_selesai' => optional($item->tanggal_selesai)->format('Y-m-d'),
+                ]),
             'sertifikats' => $sertifikats,
-            'template' => $template ? [
-                'id' => $template->id,
-                'file_path' => $template->file_path,
-                'nama_x' => $template->nama_x,
-                'nama_y' => $template->nama_y,
-                'nama_font_size' => $template->nama_font_size,
-                'nama_alignment' => $template->nama_alignment,
-                'periode_x' => $template->periode_x,
-                'periode_y' => $template->periode_y,
-                'periode_font_size' => $template->periode_font_size,
-                'periode_alignment' => $template->periode_alignment,
-                'tanggal_x' => $template->tanggal_x,
-                'tanggal_y' => $template->tanggal_y,
-                'tanggal_font_size' => $template->tanggal_font_size,
-                'tanggal_alignment' => $template->tanggal_alignment,
-            ] : null,
+            'template' => $template ? $this->templateProps($template) : null,
         ]);
     }
 
@@ -66,22 +67,7 @@ class SertifikatController extends Controller
         $template = TemplateSertifikat::query()->where('is_active', true)->latest()->first();
 
         return Inertia::render('Sertifikat/Template', [
-            'template' => $template ? [
-                'id' => $template->id,
-                'file_path' => $template->file_path,
-                'nama_x' => $template->nama_x,
-                'nama_y' => $template->nama_y,
-                'nama_font_size' => $template->nama_font_size,
-                'nama_alignment' => $template->nama_alignment,
-                'periode_x' => $template->periode_x,
-                'periode_y' => $template->periode_y,
-                'periode_font_size' => $template->periode_font_size,
-                'periode_alignment' => $template->periode_alignment,
-                'tanggal_x' => $template->tanggal_x,
-                'tanggal_y' => $template->tanggal_y,
-                'tanggal_font_size' => $template->tanggal_font_size,
-                'tanggal_alignment' => $template->tanggal_alignment,
-            ] : null,
+            'template' => $template ? $this->templateProps($template) : null,
         ]);
     }
 
@@ -93,20 +79,32 @@ class SertifikatController extends Controller
         $tanggalMulai = $request->date('tanggal_mulai_pkl') ?? $peserta->tanggal_mulai;
         $tanggalSelesai = $request->date('tanggal_selesai_pkl') ?? $peserta->tanggal_selesai;
         $tanggalTandaTangan = $request->date('tanggal_tanda_tangan');
-        $periodeText = sprintf('%s - %s', optional($tanggalMulai)->format('d M Y'), optional($tanggalSelesai)->format('d M Y'));
+
+        $teksNama = $peserta->nama;
+        $teksPeriode = sprintf('%s - %s', optional($tanggalMulai)->format('d M Y'), optional($tanggalSelesai)->format('d M Y'));
+        $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
+
+        $fit = $this->autoFit(
+            [
+                'nama' => [$teksNama, (float) $template->nama_lebar_max],
+                'periode' => [$teksPeriode, (float) $template->periode_lebar_max],
+                'tanggal' => [$teksTanggal, (float) $template->tanggal_lebar_max],
+            ]
+        );
 
         $templateImage = Storage::disk('public')->get($template->file_path);
         $templateMime = Storage::disk('public')->mimeType($template->file_path) ?: 'image/png';
 
         $pdf = Pdf::loadView('sertifikat.pdf', [
-            'templateImage' => 'data:' . $templateMime . ';base64,' . base64_encode($templateImage),
-            'namaPeserta' => $peserta->nama,
-            'periodeText' => $periodeText,
-            'tanggalText' => optional($tanggalTandaTangan)->format('d M Y'),
+            'templateImage' => 'data:'.$templateMime.';base64,'.base64_encode($templateImage),
+            'namaPeserta' => $teksNama,
+            'periodeText' => $teksPeriode,
+            'tanggalText' => $teksTanggal,
             'template' => $template,
+            'fontSizes' => $fit['sizes'],
         ])->setPaper('a4', 'landscape');
 
-        $filePath = 'sertifikat/' . now()->format('Y/m') . '/' . str()->uuid() . '.pdf';
+        $filePath = 'sertifikat/'.now()->format('Y/m').'/'.str()->uuid().'.pdf';
         Storage::disk('public')->put($filePath, $pdf->output());
 
         Sertifikat::create([
@@ -117,7 +115,14 @@ class SertifikatController extends Controller
             'generated_at' => now(),
         ]);
 
-        return redirect()->route('sertifikat.index')->with('status', 'Sertifikat berhasil digenerate.');
+        $status = 'Sertifikat berhasil digenerate.';
+
+        if ($fit['warnings']) {
+            $status .= ' Catatan: area '.implode(', ', $fit['warnings'])
+                .' terlalu sempit sehingga memakai ukuran font minimum ('.self::MIN_FONT_SIZE.'px).';
+        }
+
+        return redirect()->route('sertifikat.index')->with('status', $status);
     }
 
     public function storeTemplate(StoreTemplateSertifikatRequest $request): RedirectResponse
@@ -146,6 +151,7 @@ class SertifikatController extends Controller
 
             if ($template) {
                 $template->update($payload + ['is_active' => true]);
+
                 return;
             }
 
@@ -166,5 +172,80 @@ class SertifikatController extends Controller
         $sertifikat->delete();
 
         return redirect()->route('sertifikat.index')->with('status', 'Sertifikat berhasil dihapus.');
+    }
+
+    /**
+     * Hitung ukuran font paling besar yang muat untuk tiap teks di dalam
+     * lebar area maksimal (persen dari lebar halaman). Setiap field dihitung
+     * independen sesuai isi teks dan lebar area miliknya.
+     *
+     * @param array<string, array{0: string, 1: float}> $fields text & lebar_max (persen)
+     *
+     * @return array{sizes: array<string, int>, warnings: array<int, string>}
+     */
+    private function autoFit(array $fields): array
+    {
+        $preheat = Pdf::loadHTML('<!DOCTYPE html><html><meta charset="UTF-8"><body style="font-family: DejaVu Sans, sans-serif;">x</body></html>');
+        $preheat->setPaper('a4', 'landscape');
+        $dompdf = $preheat->getDompdf();
+        $dompdf->render();
+
+        $fontMetrics = $dompdf->getFontMetrics();
+        $canvasWidthPt = $dompdf->getCanvas()->get_width();
+
+        /** @var string|null $font */
+        $font = $fontMetrics->getFont('DejaVu Sans');
+
+        $sizes = [];
+        $warnings = [];
+
+        foreach ($fields as $key => [$text, $maxWidthPercent]) {
+            $maxWidthPt = ($canvasWidthPt * $maxWidthPercent) / 100;
+            $size = self::MAX_FONT_SIZE;
+            $hitMinimum = false;
+
+            while ($size > self::MIN_FONT_SIZE) {
+                $widthPt = $fontMetrics->getTextWidth($text, $font, $size * 0.75);
+
+                if ($widthPt <= $maxWidthPt) {
+                    break;
+                }
+
+                $size--;
+            }
+
+            if ($size <= self::MIN_FONT_SIZE && $fontMetrics->getTextWidth($text, $font, self::MIN_FONT_SIZE * 0.75) > $maxWidthPt) {
+                $size = self::MIN_FONT_SIZE;
+                $hitMinimum = true;
+            }
+
+            $sizes[$key] = $size;
+
+            if ($hitMinimum) {
+                $warnings[] = $key;
+            }
+        }
+
+        return ['sizes' => $sizes, 'warnings' => $warnings];
+    }
+
+    private function templateProps(TemplateSertifikat $template): array
+    {
+        return [
+            'id' => $template->id,
+            'file_path' => $template->file_path,
+            'nama_x' => $template->nama_x,
+            'nama_y' => $template->nama_y,
+            'nama_alignment' => $template->nama_alignment,
+            'nama_lebar_max' => $template->nama_lebar_max,
+            'periode_x' => $template->periode_x,
+            'periode_y' => $template->periode_y,
+            'periode_alignment' => $template->periode_alignment,
+            'periode_lebar_max' => $template->periode_lebar_max,
+            'tanggal_x' => $template->tanggal_x,
+            'tanggal_y' => $template->tanggal_y,
+            'tanggal_alignment' => $template->tanggal_alignment,
+            'tanggal_lebar_max' => $template->tanggal_lebar_max,
+        ];
     }
 }

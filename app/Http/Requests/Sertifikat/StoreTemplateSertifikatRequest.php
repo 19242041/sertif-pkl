@@ -17,16 +17,16 @@ class StoreTemplateSertifikatRequest extends FormRequest
             'template' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'],
             'nama_x' => ['required', 'numeric', 'between:0,100'],
             'nama_y' => ['required', 'numeric', 'between:0,100'],
-            'nama_font_size' => ['required', 'integer', 'min:8', 'max:80'],
             'nama_alignment' => ['required', 'in:left,center,right'],
+            'nama_lebar_max' => ['required', 'numeric', 'between:1,100'],
             'periode_x' => ['required', 'numeric', 'between:0,100'],
             'periode_y' => ['required', 'numeric', 'between:0,100'],
-            'periode_font_size' => ['required', 'integer', 'min:8', 'max:80'],
             'periode_alignment' => ['required', 'in:left,center,right'],
+            'periode_lebar_max' => ['required', 'numeric', 'between:1,100'],
             'tanggal_x' => ['required', 'numeric', 'between:0,100'],
             'tanggal_y' => ['required', 'numeric', 'between:0,100'],
-            'tanggal_font_size' => ['required', 'integer', 'min:8', 'max:80'],
             'tanggal_alignment' => ['required', 'in:left,center,right'],
+            'tanggal_lebar_max' => ['required', 'numeric', 'between:1,100'],
         ];
     }
 }

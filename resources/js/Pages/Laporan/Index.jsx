@@ -6,9 +6,7 @@ export default function Index({ summary, peserta = [], filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || 'all');
     const [startDate, setStartDate] = useState(filters.start_date || '');
-    const [endDate, setEndDate] = useState(filters.end_date || '');
-
-    // Fungsi submit filter saat tombol Cari diklik / tekan Enter
+    const [endDate, setEndDate] = useState(filters.end_date || '');    // Fungsi submit filter saat tombol Cari diklik / tekan Enter
     const handleFilter = (e) => {
         if (e) e.preventDefault();
 
@@ -42,7 +40,7 @@ export default function Index({ summary, peserta = [], filters = {} }) {
         { label: 'Total Peserta', value: summary?.total_peserta ?? 0, border: 'border-l-blue-500' },
         { label: 'PKL Aktif', value: summary?.aktif ?? 0, border: 'border-l-emerald-500' },
         { label: 'PKL Selesai', value: summary?.selesai ?? 0, border: 'border-l-indigo-500' },
-        { label: 'Sertifikat Upload', value: summary?.sertifikat_upload ?? 0, border: 'border-l-amber-500' },
+        { label: 'Sertifikat Terbit', value: summary?.sertifikat_terbit ?? 0, border: 'border-l-amber-500' },
     ];
 
     const isFiltered = search || status !== 'all' || startDate || endDate;
@@ -105,8 +103,9 @@ export default function Index({ summary, peserta = [], filters = {} }) {
                                 className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-800 focus:border-slate-800 focus:ring-0"
                             >
                                 <option value="all">Semua Status</option>
-                                <option value="aktif">Aktif</option>
-                                <option value="selesai">Selesai</option>
+                                <option value="Aktif">Aktif</option>
+                                <option value="Selesai">Selesai</option>
+                                <option value="Berhenti">Berhenti</option>
                             </select>
                         </div>
 
@@ -177,15 +176,17 @@ export default function Index({ summary, peserta = [], filters = {} }) {
                                         <tr key={item.id || index} className="hover:bg-slate-50">
                                             <td className="px-4 py-2.5 font-semibold text-slate-800">
                                                 {item.nama}
-                                                <div className="text-[10px] font-normal text-slate-400">{item.nim_nisn || '-'}</div>
+                                                <div className="text-[10px] font-normal text-slate-400">{item.nis_nim || '-'}</div>
                                             </td>
-                                            <td className="px-4 py-2.5">{item.instansi || '-'}</td>
+                                            <td className="px-4 py-2.5">{item.asal_institusi || '-'}</td>
                                             <td className="px-4 py-2.5 text-[11px]">
                                                 {item.tanggal_mulai} s/d {item.tanggal_selesai}
                                             </td>
                                             <td className="px-4 py-2.5">
                                                 <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                                                    item.status === 'aktif' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                                                    item.status === 'Aktif' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                                        : item.status === 'Selesai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                                                            : 'bg-rose-50 text-rose-600 border border-rose-200'
                                                 }`}>
                                                     {item.status}
                                                 </span>

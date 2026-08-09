@@ -1,7 +1,37 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Download, FileText, FileUp } from 'lucide-react';
-import { useEffect } from 'react';
+import { AlertTriangle, Download, FileText, FileUp } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+const MIN_FONT = 10;
+const MAX_FONT = 40;
+
+function measureText(text, fontSizePx) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = `${fontSizePx}px "DejaVu Sans", Roboto, "Helvetica Neue", Arial, sans-serif`;
+    return ctx.measureText(text).width;
+}
+
+function fitFontSize(text, maxWidthPx) {
+    if (!text || maxWidthPx <= 0) {
+        return { size: MIN_FONT, atMin: false };
+    }
+
+    for (let size = MAX_FONT; size > MIN_FONT; size -= 1) {
+        if (measureText(text, size) <= maxWidthPx) {
+            return { size, atMin: false };
+        }
+    }
+
+    return { size: MIN_FONT, atMin: true };
+}
+
+const alignmentTransform = (align) => (
+    align === 'center' ? 'translate(-50%, -50%)'
+        : align === 'right' ? 'translate(-100%, -50%)'
+            : 'translate(0, -50%)'
+);
 
 export default function Generate({ pesertaOptions, sertifikats, template }) {
     const form = useForm({
@@ -11,6 +41,20 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
         tanggal_selesai_pkl: '',
         tanggal_tanda_tangan: '',
     });
+    const previewRef = useRef(null);
+    const [previewWidth, setPreviewWidth] = useState(0);
+
+    useEffect(() => {
+        const el = previewRef.current;
+        if (!el) return;
+
+        const update = () => setPreviewWidth(el.clientWidth);
+
+        update();
+        window.addEventListener('resize', update);
+
+        return () => window.removeEventListener('resize', update);
+    }, [template?.file_path]);
 
     const submit = (event) => {
         event.preventDefault();
@@ -123,20 +167,31 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
                             <div className="mt-4 rounded-[24px] border border-[#E4E9F0] bg-[#F7F9FC] p-4">
                                 {template ? (
-                                    <div className="relative overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
+                                    <div ref={previewRef} className="relative overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
                                         <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="block w-full object-cover" />
                                         {[
-                                            { key: 'nama', label: 'Nama Peserta', x: template.nama_x, y: template.nama_y, size: template.nama_font_size, align: template.nama_alignment, value: 'Nama Peserta Contoh' },
-                                            { key: 'periode', label: 'Periode PKL', x: template.periode_x, y: template.periode_y, size: template.periode_font_size, align: template.periode_alignment, value: '01 Januari 2026 - 28 Februari 2026' },
-                                            { key: 'tanggal', label: 'Tanggal Tanda Tangan', x: template.tanggal_x, y: template.tanggal_y, size: template.tanggal_font_size, align: template.tanggal_alignment, value: 'Karawang, 28 Februari 2026' },
-                                        ].map((item) => (
-                                            <div key={item.key} className="absolute max-w-[40%] -translate-y-1/2 text-[#1B2733]" style={{ left: `${item.x}%`, top: `${item.y}%`, transform: item.align === 'center' ? 'translate(-50%, -50%)' : item.align === 'right' ? 'translate(-100%, -50%)' : 'translate(0, -50%)', textAlign: item.align, fontSize: `${item.size}px` }}>
-                                                <div className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#657085] shadow-sm">
-                                                    {item.label}
+                                            { key: 'nama', label: 'Nama Peserta', x: template.nama_x, y: template.nama_y, lebar: template.nama_lebar_max, align: template.nama_alignment, value: 'Nama Peserta Contoh' },
+                                            { key: 'periode', label: 'Periode PKL', x: template.periode_x, y: template.periode_y, lebar: template.periode_lebar_max, align: template.periode_alignment, value: '01 Januari 2026 - 28 Februari 2026' },
+                                            { key: 'tanggal', label: 'Tanggal Tanda Tangan', x: template.tanggal_x, y: template.tanggal_y, lebar: template.tanggal_lebar_max, align: template.tanggal_alignment, value: 'Karawang, 28 Februari 2026' },
+                                        ].map((item) => {
+                                            const maxWidthPx = (previewWidth * item.lebar) / 100;
+                                            const { size, atMin } = fitFontSize(item.value, maxWidthPx);
+
+                                            return (
+                                                <div key={item.key} className="pointer-events-none absolute whitespace-normal text-[#1B2733]" style={{ left: `${item.x}%`, top: `${item.y}%`, transform: alignmentTransform(item.align), width: `${item.lebar}%`, textAlign: item.align, fontSize: `${size}px`, lineHeight: 1.1 }}>
+                                                    <div className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#657085] shadow-sm">
+                                                        {item.label}
+                                                    </div>
+                                                    {atMin && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-[#C0433D] px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                                                            <AlertTriangle className="h-3 w-3" />
+                                                            Area sempit, font minimum {MIN_FONT}px
+                                                        </span>
+                                                    )}
+                                                    <div className="mt-1 font-semibold text-[#0E2A47]">{item.value}</div>
                                                 </div>
-                                                <div className="mt-1 font-semibold text-[#0E2A47]">{item.value}</div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <div className="flex min-h-[240px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[#C9D3E0] bg-white text-center">

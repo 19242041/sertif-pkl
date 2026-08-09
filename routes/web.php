@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PesertaPklController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SertifikatController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', fn () => redirect()->route('dashboard'))->middleware('auth');
 
@@ -22,15 +22,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/sertifikat/{sertifikat}', [SertifikatController::class, 'destroy'])->name('sertifikat.destroy');
     Route::get('/sertifikat/{sertifikat}/download', [SertifikatController::class, 'download'])->name('sertifikat.download');
 
-    Route::get('/laporan', fn () => Inertia::render('Laporan/Index', [
-        'summary' => [
-            'total_peserta' => \App\Models\PesertaPkl::count(),
-            'aktif' => \App\Models\PesertaPkl::where('status', 'Aktif')->count(),
-            'selesai' => \App\Models\PesertaPkl::where('status', 'Selesai')->count(),
-            'sertifikat_terbit' => \App\Models\Sertifikat::count(),
-            'belum_buat' => \App\Models\PesertaPkl::doesntHave('sertifikats')->count(),
-        ],
-    ]))->name('laporan.index');
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/export-pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export-pdf');
 
     Route::get('/pengaturan', [ProfileController::class, 'edit'])->name('pengaturan.edit');
 
