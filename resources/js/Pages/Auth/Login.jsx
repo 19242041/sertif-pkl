@@ -24,63 +24,34 @@ export default function Login({ status }) {
                 <div className="absolute bottom-[-4rem] left-[18%] h-64 w-64 rounded-full bg-[#E8A712]/18 blur-3xl lg:h-72 lg:w-72" />
             </div>
 
-            <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl items-center justify-center">
-                <div className="grid w-full items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
-                    {/* KIRI: Branding dan Informasi */}
-                    <div className="hidden max-w-[640px] text-white lg:block">
-                        <div className="mb-8 flex items-center gap-3.5">
+            <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] max-w-5xl items-center justify-center">
+                <div className="grid w-full items-center gap-8 lg:grid-cols-[1fr_1fr] lg:gap-10">
+                    {/* KIRI: logo + keterangan saja, tanpa headline/paragraf/kartu fitur */}
+                    <div className="hidden text-white lg:block">
+                        <div className="flex items-center gap-3.5">
                             <img
                                 src="/images/logo-disnakertrans.png"
                                 alt="Logo Disnakertrans"
-                                className="h-11 w-auto object-contain"
+                                className="h-14 w-auto object-contain"
                             />
-                            <div className="h-8 w-px bg-white/20" />
+                            <div className="h-10 w-px bg-white/20" />
                             <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                                <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-white/60">
                                     Disnakertrans Provinsi Jawa Barat
                                 </p>
-                                <p className="text-[12.5px] text-white/70">
+                                <p className="text-[14px] text-white/80">
                                     UPTD Pengawasan Ketenagakerjaan Wilayah II Karawang
                                 </p>
                             </div>
                         </div>
 
-                        <h1 className="font-display max-w-[560px] text-[32px] font-extrabold leading-[1.15] text-white">
-                            Sistem pencatatan peserta PKL dan arsip sertifikat.
-                        </h1>
-                        <p className="mt-4 max-w-[520px] text-[14.5px] leading-6 text-white/72">
-                            Digunakan untuk mencatat data peserta PKL, memantau status
-                            PKL, dan menyimpan sertifikat secara terpusat.
-                        </p>
-
-                        <div className="mt-9 grid max-w-[640px] grid-cols-3 gap-4">
-                            <div className="rounded-[18px] border border-white/10 bg-white/7 p-5 backdrop-blur-sm">
-                                <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-lg bg-[#1B63B0]/22 text-[13px] font-bold text-[#D7E8FB]">
-                                    01
-                                </div>
-                                <p className="text-[15px] font-bold text-white">Pantau status PKL</p>
-                                <p className="mt-1.5 text-[13px] leading-6 text-white/70">
-                                    Lihat jumlah peserta aktif dan selesai dalam satu tampilan.
-                                </p>
-                            </div>
-                            <div className="rounded-[18px] border border-white/10 bg-white/7 p-5 backdrop-blur-sm">
-                                <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-lg bg-[#2E8B4E]/22 text-[13px] font-bold text-[#D5F0DD]">
-                                    02
-                                </div>
-                                <p className="text-[15px] font-bold text-white">Data terpusat</p>
-                                <p className="mt-1.5 text-[13px] leading-6 text-white/70">
-                                    Semua data peserta PKL tersimpan rapi dan mudah dicari.
-                                </p>
-                            </div>
-                            <div className="rounded-[18px] border border-white/10 bg-white/7 p-5 backdrop-blur-sm">
-                                <div className="mb-3.5 flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8A712]/22 text-[13px] font-bold text-[#FEF0BF]">
-                                    03
-                                </div>
-                                <p className="text-[15px] font-bold text-white">Sertifikat digital</p>
-                                <p className="mt-1.5 text-[13px] leading-6 text-white/70">
-                                    Arsip sertifikat tersimpan aman, tanpa dokumen fisik.
-                                </p>
-                            </div>
+                        <div className="mt-7 border-t border-white/15 pt-6">
+                            <p className="font-display text-[22px] font-extrabold tracking-[0.04em] text-white">
+                                SIMPATIK
+                            </p>
+                            <p className="mt-1.5 text-[13px] leading-5 text-white/65">
+                                Sistem pencatatan peserta PKL dan arsip sertifikat.
+                            </p>
                         </div>
                     </div>
 
