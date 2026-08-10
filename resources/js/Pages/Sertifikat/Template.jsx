@@ -125,13 +125,21 @@ export default function Template({ template }) {
     };
 
     const submit = (event) => {
-        event.preventDefault();
+    event.preventDefault();
 
-        form.post(route('sertifikat.template.store'), {
-            forceFormData: true,
-            preserveScroll: true,
-        });
-    };
+    console.log('DATA YANG DIKIRIM:', form.data);
+
+    form.post(route('sertifikat.template.store'), {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            console.log('BERHASIL SIMPAN');
+        },
+        onError: (errors) => {
+            console.log('ERROR VALIDASI:', errors);
+        },
+    });
+};
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Kelola Template Sertifikat' }]}>
@@ -183,8 +191,18 @@ export default function Template({ template }) {
                                                     {field.label}
                                                 </div>
                                                 <div
-                                                    className="mt-1 whitespace-normal text-[#1B2733] font-semibold"
-                                                    style={{ maxWidth: `${lebarMax}%`, width: `${lebarMax}%`, fontSize: `${size}px`, lineHeight: 1.1, textAlign: alignment }}
+                                                    className="mt-1 text-[#1B2733] font-semibold"
+                                                    style={{
+                                                        maxWidth: `${lebarMax}%`,
+                                                        width: 'auto',
+                                                        fontSize: `${size}px`,
+                                                        lineHeight: 1.15,
+                                                        textAlign: alignment,
+                                                        boxSizing: 'border-box',
+                                                        overflowWrap: 'break-word',
+                                                        wordBreak: 'break-word',
+                                                        whiteSpace: 'normal',
+                                                    }}
                                                 >
                                                     {field.value}
                                                 </div>

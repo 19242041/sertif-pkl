@@ -178,7 +178,24 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                             const { size, atMin } = fitFontSize(item.value, maxWidthPx);
 
                                             return (
-                                                <div key={item.key} className="pointer-events-none absolute whitespace-normal text-[#1B2733]" style={{ left: `${item.x}%`, top: `${item.y}%`, transform: alignmentTransform(item.align), width: `${item.lebar}%`, textAlign: item.align, fontSize: `${size}px`, lineHeight: 1.1 }}>
+                                                <div
+                                                    key={item.key}
+                                                    className="pointer-events-none absolute text-[#1B2733]"
+                                                    style={{
+                                                        left: `${item.x}%`,
+                                                        top: `${item.y}%`,
+                                                        transform: alignmentTransform(item.align),
+                                                        maxWidth: `${item.lebar}%`,
+                                                        width: 'auto',
+                                                        textAlign: item.align,
+                                                        fontSize: `${size}px`,
+                                                        lineHeight: 1.15,
+                                                        boxSizing: 'border-box',
+                                                        overflowWrap: 'break-word',
+                                                        wordBreak: 'break-word',
+                                                        whiteSpace: 'normal',
+                                                    }}
+                                                >
                                                     <div className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#657085] shadow-sm">
                                                         {item.label}
                                                     </div>

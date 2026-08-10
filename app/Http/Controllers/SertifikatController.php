@@ -72,94 +72,197 @@ class SertifikatController extends Controller
     }
 
     public function store(StoreGeneratedSertifikatRequest $request): RedirectResponse
-    {
-        $template = TemplateSertifikat::query()->where('is_active', true)->latest()->firstOrFail();
-        $peserta = PesertaPkl::query()->findOrFail($request->integer('peserta_pkl_id'));
+{
+    $template = TemplateSertifikat::query()
+        ->where('is_active', true)
+        ->latest()
+        ->firstOrFail();
 
-        $tanggalMulai = $request->date('tanggal_mulai_pkl') ?? $peserta->tanggal_mulai;
-        $tanggalSelesai = $request->date('tanggal_selesai_pkl') ?? $peserta->tanggal_selesai;
-        $tanggalTandaTangan = $request->date('tanggal_tanda_tangan');
+    $peserta = PesertaPkl::query()
+        ->findOrFail($request->integer('peserta_pkl_id'));
 
-        $teksNama = $peserta->nama;
-        $teksPeriode = sprintf('%s - %s', optional($tanggalMulai)->format('d M Y'), optional($tanggalSelesai)->format('d M Y'));
-        $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
+    $tanggalMulai = $request->date('tanggal_mulai_pkl') ?? $peserta->tanggal_mulai;
+    $tanggalSelesai = $request->date('tanggal_selesai_pkl') ?? $peserta->tanggal_selesai;
+    $tanggalTandaTangan = $request->date('tanggal_tanda_tangan');
 
-        $fit = $this->autoFit(
-            [
-                'nama' => [$teksNama, (float) $template->nama_lebar_max],
-                'periode' => [$teksPeriode, (float) $template->periode_lebar_max],
-                'tanggal' => [$teksTanggal, (float) $template->tanggal_lebar_max],
-            ]
-        );
+    $teksNama = $peserta->nama;
 
-        $templateImage = Storage::disk('public')->get($template->file_path);
-        $templateMime = Storage::disk('public')->mimeType($template->file_path) ?: 'image/png';
+    $teksPeriode = sprintf(
+        '%s - %s',
+        optional($tanggalMulai)->format('d M Y'),
+        optional($tanggalSelesai)->format('d M Y')
+    );
 
-        $pdf = Pdf::loadView('sertifikat.pdf', [
-            'templateImage' => 'data:'.$templateMime.';base64,'.base64_encode($templateImage),
-            'namaPeserta' => $teksNama,
-            'periodeText' => $teksPeriode,
-            'tanggalText' => $teksTanggal,
-            'template' => $template,
-            'fontSizes' => $fit['sizes'],
-        ])->setPaper('a4', 'landscape');
+    $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
 
-        $filePath = 'sertifikat/'.now()->format('Y/m').'/'.str()->uuid().'.pdf';
-        Storage::disk('public')->put($filePath, $pdf->output());
+    /*
+     * Hitung ukuran font berdasarkan template.
+     */
+    $fit = $this->autoFit([
+        'nama' => [
+            $teksNama,
+            (float) $template->nama_lebar_max
+        ],
+        'periode' => [
+            $teksPeriode,
+            (float) $template->periode_lebar_max
+        ],
+        'tanggal' => [
+            $teksTanggal,
+            (float) $template->tanggal_lebar_max
+        ],
+    ]);
 
-        Sertifikat::create([
-            'peserta_pkl_id' => $peserta->id,
-            'nomor_sertifikat' => $request->string('nomor_sertifikat')->toString(),
-            'tanggal_sertifikat' => $tanggalTandaTangan,
-            'file_path' => $filePath,
-            'generated_at' => now(),
-        ]);
+    /*
+     * AMBIL FILE TEMPLATE ASLI
+     * Jangan gunakan Base64 karena sebelumnya gambar tidak muncul
+     * di hasil PDF.
+     */
+    $templateImagePath = Storage::disk('public')->path(
+        $template->file_path
+    );
 
-        $status = 'Sertifikat berhasil digenerate.';
-
-        if ($fit['warnings']) {
-            $status .= ' Catatan: area '.implode(', ', $fit['warnings'])
-                .' terlalu sempit sehingga memakai ukuran font minimum ('.self::MIN_FONT_SIZE.'px).';
-        }
-
-        return redirect()->route('sertifikat.index')->with('status', $status);
+    if (! file_exists($templateImagePath)) {
+        return redirect()
+            ->back()
+            ->withErrors([
+                'template' => 'File template tidak ditemukan: ' . $template->file_path
+            ]);
     }
+
+    /*
+     * Gunakan file:// supaya DomPDF membaca gambar langsung
+     * dari storage.
+     */
+    $templateImage = 'file://' . str_replace(
+        '\\',
+        '/',
+        $templateImagePath
+    );
+
+    /*
+     * Generate PDF dengan rasio 16:9 sesuai template.
+     */
+    $pdf = Pdf::loadView('sertifikat.pdf', [
+        'templateImage' => $templateImage,
+        'namaPeserta' => $teksNama,
+        'periodeText' => $teksPeriode,
+        'tanggalText' => $teksTanggal,
+        'template' => $template,
+        'fontSizes' => $fit['sizes'],
+    ]);
+
+    /*
+     * Ukuran 16:9.
+     * 1152 x 648 point = rasio 16:9.
+     */
+    $pdf->setPaper([0, 0, 1152, 648]);
+
+    /*
+     * Pastikan DomPDF boleh membaca file lokal.
+     */
+    $dompdf = $pdf->getDomPDF();
+
+    $dompdf->getOptions()->set([
+        'isRemoteEnabled' => true,
+        'isHtml5ParserEnabled' => true,
+        'chroot' => base_path(),
+    ]);
+
+    $filePath = 'sertifikat/'
+        . now()->format('Y/m')
+        . '/'
+        . str()->uuid()
+        . '.pdf';
+
+    Storage::disk('public')->put(
+        $filePath,
+        $pdf->output()
+    );
+
+    Sertifikat::create([
+        'peserta_pkl_id' => $peserta->id,
+        'nomor_sertifikat' => $request
+            ->string('nomor_sertifikat')
+            ->toString(),
+        'tanggal_sertifikat' => $tanggalTandaTangan,
+        'file_path' => $filePath,
+        'generated_at' => now(),
+    ]);
+
+    $status = 'Sertifikat berhasil digenerate.';
+
+    if ($fit['warnings']) {
+        $status .= ' Catatan: area '
+            . implode(', ', $fit['warnings'])
+            . ' terlalu sempit sehingga memakai ukuran font minimum ('
+            . self::MIN_FONT_SIZE
+            . 'px).';
+    }
+
+    return redirect()
+        ->route('sertifikat.index')
+        ->with('status', $status);
+}
 
     public function storeTemplate(StoreTemplateSertifikatRequest $request): RedirectResponse
-    {
-        $payload = $request->validated();
-        $template = TemplateSertifikat::query()->where('is_active', true)->latest()->first();
+{
+    $validated = $request->validated();
 
-        if (! $template && ! $request->hasFile('template')) {
-            return redirect()->back()->withErrors(['template' => 'Template gambar wajib diunggah untuk penyimpanan pertama.']);
+    $template = TemplateSertifikat::query()
+        ->where('is_active', true)
+        ->latest()
+        ->first();
+
+    /*
+     * Kalau upload gambar baru, simpan gambar ke storage/public.
+     */
+    if ($request->hasFile('template')) {
+        // Hapus gambar template lama kalau ada
+        if ($template && $template->file_path) {
+            Storage::disk('public')->delete($template->file_path);
         }
 
-        if ($request->hasFile('template')) {
-            if ($template?->file_path) {
-                Storage::disk('public')->delete($template->file_path);
-            }
-
-            $payload['file_path'] = $request->file('template')->store('sertifikat/template', 'public');
-        } elseif ($template) {
-            $payload['file_path'] = $template->file_path;
-        }
-
-        unset($payload['template']);
-
-        DB::transaction(function () use ($payload, $template): void {
-            TemplateSertifikat::query()->update(['is_active' => false]);
-
-            if ($template) {
-                $template->update($payload + ['is_active' => true]);
-
-                return;
-            }
-
-            TemplateSertifikat::create($payload + ['is_active' => true]);
-        });
-
-        return redirect()->route('sertifikat.template')->with('status', 'Template sertifikat berhasil disimpan.');
+        $filePath = $request->file('template')->store(
+            'sertifikat/template',
+            'public'
+        );
+    } elseif ($template) {
+        // Kalau tidak upload baru, tetap gunakan template lama
+        $filePath = $template->file_path;
+    } else {
+        return back()
+            ->withErrors([
+                'template' => 'Silakan upload gambar template sertifikat terlebih dahulu.'
+            ])
+            ->withInput();
     }
+
+    unset($validated['template']);
+
+    $validated['file_path'] = $filePath;
+    $validated['is_active'] = true;
+
+    /*
+     * Nonaktifkan template lama.
+     */
+    TemplateSertifikat::query()->update([
+        'is_active' => false,
+    ]);
+
+    /*
+     * Simpan template baru / update template aktif.
+     */
+    if ($template) {
+        $template->update($validated);
+    } else {
+        TemplateSertifikat::create($validated);
+    }
+
+    return redirect()
+        ->route('sertifikat.template')
+        ->with('status', 'Template sertifikat berhasil disimpan.');
+}
 
     public function download(Sertifikat $sertifikat)
     {
@@ -185,8 +288,15 @@ class SertifikatController extends Controller
      */
     private function autoFit(array $fields): array
     {
-        $preheat = Pdf::loadHTML('<!DOCTYPE html><html><meta charset="UTF-8"><body style="font-family: DejaVu Sans, sans-serif;">x</body></html>');
-        $preheat->setPaper('a4', 'landscape');
+        $preheat = Pdf::loadHTML(
+            '<!DOCTYPE html>
+            <html>
+            <meta charset="UTF-8">
+            <body style="font-family: DejaVu Sans, sans-serif;">x</body>
+            </html>'
+);
+
+        $preheat->setPaper([0, 0, 1152, 648]);
         $dompdf = $preheat->getDompdf();
         $dompdf->render();
 
