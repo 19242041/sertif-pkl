@@ -1,0 +1,17 @@
+{
+  "provider": {
+    "9router": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Local 9Router",
+      "options": {
+        "baseURL": "http://localhost:20128/v1",
+        "apiKey": "9router"
+      },
+      "models": {
+        "combo": {
+          "name": "combo"
+        }
+      }
+    }
+  }
+}
