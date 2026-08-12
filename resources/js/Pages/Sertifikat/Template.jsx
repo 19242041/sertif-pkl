@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { AlertTriangle, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-const MIN_FONT = 10;
+const MIN_FONT = 0.1;
 const MAX_FONT = 120;
 
 const fontOptions = [
@@ -378,7 +378,7 @@ export default function Template({ template }) {
                                             </label>
                                             <label className="block">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Ukuran Font (px)</span>
-                                                <input type="number" min="10" max="120" step="0.5" value={form.data[`${field.key}_font_size`]} onChange={(e) => form.setData(`${field.key}_font_size`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
+                                                <input type="number" min="0.1" max="120" step="0.1" value={form.data[`${field.key}_font_size`]} onChange={(e) => form.setData(`${field.key}_font_size`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
                                             </label>
                                             <label className="block">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Font</span>

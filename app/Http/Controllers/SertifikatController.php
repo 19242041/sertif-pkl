@@ -383,7 +383,7 @@ class SertifikatController extends Controller
         $fontFamily = trim($fontFamily);
 
         if ($fontFamily === 'Times New Roman') {
-            return 'Times-Roman';
+            return 'Times-Roman ';
         }
 
         if ($fontFamily === 'Luxurious Script') {
