@@ -22,8 +22,6 @@
             font-family: DejaVu Sans, sans-serif;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap');
-
         .certificate {
             position: relative;
             width: 100%;
@@ -53,6 +51,7 @@
             word-break: break-word;
             display: inline-block;
             box-sizing: border-box;
+            font-family: DejaVu Sans, sans-serif;
         }
     </style>
 </head>
@@ -74,15 +73,9 @@
         style="
             left: {{ $template->nama_x }}%;
             top: {{ $template->nama_y }}%;
-            width: {{ $template->nama_lebar_max }}%;
             max-width: {{ $template->nama_lebar_max }}%;
             font-size: {{ $fontSizes['nama'] }}px;
-<<<<<<< HEAD
             color: {{ $colors['nama'] }};
-=======
-            color: {{ $template->nama_color }};
-            font-family: '{{ $template->nama_font_family }}', cursive, sans-serif;
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
             text-align: {{ $template->nama_alignment }};
             transform: translate(
                 {{ $template->nama_alignment === 'center'
@@ -128,15 +121,9 @@
         style="
             left: {{ $template->periode_x }}%;
             top: {{ $template->periode_y }}%;
-            width: {{ $template->periode_lebar_max }}%;
             max-width: {{ $template->periode_lebar_max }}%;
             font-size: {{ $fontSizes['periode'] }}px;
-<<<<<<< HEAD
             color: {{ $colors['periode'] }};
-=======
-            color: {{ $template->periode_color }};
-            font-family: '{{ $template->periode_font_family }}', serif;
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
             text-align: {{ $template->periode_alignment }};
             transform: translate(
                 {{ $template->periode_alignment === 'center'
@@ -158,15 +145,9 @@
         style="
             left: {{ $template->tanggal_x }}%;
             top: {{ $template->tanggal_y }}%;
-            width: {{ $template->tanggal_lebar_max }}%;
             max-width: {{ $template->tanggal_lebar_max }}%;
             font-size: {{ $fontSizes['tanggal'] }}px;
-<<<<<<< HEAD
             color: {{ $colors['tanggal'] }};
-=======
-            color: {{ $template->tanggal_color }};
-            font-family: '{{ $template->tanggal_font_family }}', serif;
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
             text-align: {{ $template->tanggal_alignment }};
             transform: translate(
                 {{ $template->tanggal_alignment === 'center'
