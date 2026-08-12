@@ -24,7 +24,7 @@ class StoreTemplateSertifikatRequest extends FormRequest
             // NAMA
             'nama_x' => ['required', 'numeric', 'between:0,100'],
             'nama_y' => ['required', 'numeric', 'between:0,100'],
-            'nama_font_size' => ['required', 'numeric'],
+            'nama_font_size' => ['required', 'numeric', 'between:0.1,120'],
             'nama_color' => ['required', 'string', 'regex:/^#[A-Fa-f0-9]{6}$/'],
             'nama_font_family' => ['required', 'string'],
             'nama_alignment' => ['required', 'in:left,center,right'],
@@ -42,7 +42,7 @@ class StoreTemplateSertifikatRequest extends FormRequest
 >>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
             'periode_x' => ['required', 'numeric', 'between:0,100'],
             'periode_y' => ['required', 'numeric', 'between:0,100'],
-            'periode_font_size' => ['required', 'numeric'],
+            'periode_font_size' => ['required', 'numeric', 'between:0.1,120'],
             'periode_color' => ['required', 'string', 'regex:/^#[A-Fa-f0-9]{6}$/'],
             'periode_font_family' => ['required', 'string'],
             'periode_alignment' => ['required', 'in:left,center,right'],
@@ -55,7 +55,7 @@ class StoreTemplateSertifikatRequest extends FormRequest
 >>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
             'tanggal_x' => ['required', 'numeric', 'between:0,100'],
             'tanggal_y' => ['required', 'numeric', 'between:0,100'],
-            'tanggal_font_size' => ['required', 'numeric'],
+            'tanggal_font_size' => ['required', 'numeric', 'between:0.1,120'],
             'tanggal_color' => ['required', 'string', 'regex:/^#[A-Fa-f0-9]{6}$/'],
             'tanggal_font_family' => ['required', 'string'],
             'tanggal_alignment' => ['required', 'in:left,center,right'],
