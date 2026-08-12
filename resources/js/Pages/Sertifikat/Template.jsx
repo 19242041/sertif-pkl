@@ -3,12 +3,23 @@ import { Head, useForm } from '@inertiajs/react';
 import { AlertTriangle, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 const MIN_FONT = 10;
-const MAX_FONT = 40;
+const MAX_FONT = 120;
+
+const fontOptions = [
+    'Luxurious Script',
+    'Times New Roman',
+    'DejaVu Sans',
+    'Arial',
+];
 
 const defaultPositions = {
     nama_x: 50,
     nama_y: 35,
+    nama_font_size: 80,
+    nama_color: '#f6b833',
+    nama_font_family: 'Luxurious Script',
     nama_alignment: 'center',
+<<<<<<< HEAD
     nama_lebar_max: 55,
     nama_color: '#f6b833',
     asal_x: 50,
@@ -21,18 +32,58 @@ const defaultPositions = {
     periode_alignment: 'center',
     periode_lebar_max: 75,
     periode_color: '#111176',
+=======
+    nama_lebar_max: 70,
+    periode_x: 50,
+    periode_y: 52,
+    periode_font_size: 19,
+    periode_color: '#111176',
+    periode_font_family: 'Times New Roman',
+    periode_alignment: 'center',
+    periode_lebar_max: 65,
+>>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
     tanggal_x: 50,
-    tanggal_y: 80,
+    tanggal_y: 78,
+    tanggal_font_size: 13,
+    tanggal_color: '#111176',
+    tanggal_font_family: 'Times New Roman',
     tanggal_alignment: 'center',
     tanggal_lebar_max: 55,
     tanggal_color: '#111176',
 };
 
 const fieldConfigs = [
+<<<<<<< HEAD
     { key: 'nama', label: 'Nama Peserta', value: 'Nama Peserta Contoh' },
     { key: 'asal', label: 'Asal Sekolah', value: 'SMKN 1 Karawang' },
     { key: 'periode', label: 'Periode PKL', value: '01 Januari 2026 - 28 Februari 2026' },
     { key: 'tanggal', label: 'Tanggal Tanda Tangan', value: 'Karawang, 28 Februari 2026' },
+=======
+    {
+        key: 'nama',
+        label: 'Nama Peserta',
+        value: 'Nama Peserta Contoh',
+        defaultFontFamily: 'Luxurious Script',
+        defaultFontSize: 80,
+        defaultColor: '#f6b833',
+    },
+    {
+        key: 'periode',
+        label: 'Periode PKL',
+        value: '01 Januari 2026 - 28 Februari 2026',
+        defaultFontFamily: 'Times New Roman',
+        defaultFontSize: 19,
+        defaultColor: '#111176',
+    },
+    {
+        key: 'tanggal',
+        label: 'Tanggal Tanda Tangan',
+        value: 'Karawang,28 Februari 2026',
+        defaultFontFamily: 'Times New Roman',
+        defaultFontSize: 13,
+        defaultColor: '#111176',
+    },
+>>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
 ];
 
 const HEX_PATTERN = /^#([0-9A-Fa-f]{6})$/;
@@ -44,12 +95,14 @@ function measureText(text, fontSizePx) {
     return ctx.measureText(text).width;
 }
 
-function fitFontSize(text, maxWidthPx) {
+function fitFontSize(text, maxWidthPx, targetSize = MAX_FONT) {
     if (!text || maxWidthPx <= 0) {
         return { size: MIN_FONT, atMin: false };
     }
 
-    for (let size = MAX_FONT; size > MIN_FONT; size -= 1) {
+    const startSize = Math.min(Math.max(targetSize, MIN_FONT), MAX_FONT);
+
+    for (let size = startSize; size > MIN_FONT; size -= 0.5) {
         if (measureText(text, size) <= maxWidthPx) {
             return { size, atMin: false };
         }
@@ -173,7 +226,11 @@ export default function Template({ template }) {
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Kelola Template Sertifikat' }]}>
-            <Head title="Kelola Template Sertifikat" />
+            <Head title="Kelola Template Sertifikat">
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+                <link href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap" rel="stylesheet" />
+            </Head>
 
             <div className="space-y-6">
                 <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
@@ -206,9 +263,15 @@ export default function Template({ template }) {
                                         const positionY = Number(form.data[`${field.key}_y`]) || 50;
                                         const lebarMax = Number(form.data[`${field.key}_lebar_max`]) || 0;
                                         const alignment = form.data[`${field.key}_alignment`];
+<<<<<<< HEAD
                                         const color = form.data[`${field.key}_color`] || '#1B2733';
+=======
+                                        const fontSize = Number(form.data[`${field.key}_font_size`]) || field.defaultFontSize;
+                                        const fontColor = form.data[`${field.key}_color`] || field.defaultColor;
+                                        const fontFamily = form.data[`${field.key}_font_family`] || field.defaultFontFamily;
+>>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
                                         const maxWidthPx = (previewWidth * lebarMax) / 100;
-                                        const { size, atMin } = fitFontSize(field.value, maxWidthPx);
+                                        const { atMin } = fitFontSize(field.value, maxWidthPx, fontSize);
 
                                         return (
                                             <div key={field.key} className="pointer-events-none absolute" style={{ left: `${positionX}%`, top: `${positionY}%`, transform: alignmentTransform(alignment) }}>
@@ -225,8 +288,8 @@ export default function Template({ template }) {
                                                     className="mt-1 font-semibold"
                                                     style={{
                                                         maxWidth: `${lebarMax}%`,
-                                                        width: 'auto',
-                                                        fontSize: `${size}px`,
+                                                        width: `${lebarMax}%`,
+                                                        fontSize: `${fontSize}px`,
                                                         lineHeight: 1.15,
                                                         textAlign: alignment,
                                                         color,
@@ -234,6 +297,10 @@ export default function Template({ template }) {
                                                         overflowWrap: 'break-word',
                                                         wordBreak: 'break-word',
                                                         whiteSpace: 'normal',
+                                                        fontFamily,
+                                                        color: fontColor,
+                                                        resize: 'horizontal',
+                                                        overflow: 'auto',
                                                     }}
                                                 >
                                                     {field.value}
@@ -308,6 +375,22 @@ export default function Template({ template }) {
                                             <label className="block">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Y %</span>
                                                 <input type="number" min="0" max="100" step="0.1" value={form.data[`${field.key}_y`]} onChange={(e) => form.setData(`${field.key}_y`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
+                                            </label>
+                                            <label className="block">
+                                                <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Ukuran Font (px)</span>
+                                                <input type="number" min="10" max="120" step="0.5" value={form.data[`${field.key}_font_size`]} onChange={(e) => form.setData(`${field.key}_font_size`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
+                                            </label>
+                                            <label className="block">
+                                                <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Font</span>
+                                                <select value={form.data[`${field.key}_font_family`]} onChange={(e) => form.setData(`${field.key}_font_family`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12">
+                                                    {fontOptions.map((option) => (
+                                                        <option key={option} value={option}>{option}</option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                            <label className="block">
+                                                <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Warna</span>
+                                                <input type="color" value={form.data[`${field.key}_color`]} onChange={(e) => form.setData(`${field.key}_color`, e.target.value)} className="h-11 w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
                                             </label>
                                             <label className="block sm:col-span-2">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Lebar Area Maksimal (%)</span>

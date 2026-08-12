@@ -4,7 +4,7 @@ import { AlertTriangle, Download, FileText, FileUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const MIN_FONT = 10;
-const MAX_FONT = 40;
+const MAX_FONT = 120;
 
 function measureText(text, fontSizePx) {
     const canvas = document.createElement('canvas');
@@ -13,18 +13,20 @@ function measureText(text, fontSizePx) {
     return ctx.measureText(text).width;
 }
 
-function fitFontSize(text, maxWidthPx) {
+function fitFontSize(text, maxWidthPx, targetSize = MAX_FONT) {
     if (!text || maxWidthPx <= 0) {
         return { size: MIN_FONT, atMin: false };
     }
 
-    for (let size = MAX_FONT; size > MIN_FONT; size -= 1) {
+    const startSize = Math.min(Math.max(targetSize, MIN_FONT), MAX_FONT);
+
+    for (let size = startSize; size > MIN_FONT; size -= 0.5) {
         if (measureText(text, size) <= maxWidthPx) {
             return { size, atMin: false };
         }
     }
 
-    return { size: MIN_FONT, atMin: true };
+    return { size: MIN_FONT, atMin: measureText(text, MIN_FONT) > maxWidthPx };
 }
 
 const alignmentTransform = (align) => (
@@ -133,7 +135,11 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Terbitkan Sertifikat' }]}>
-            <Head title="Terbitkan Sertifikat" />
+            <Head title="Terbitkan Sertifikat">
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+                <link href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap" rel="stylesheet" />
+            </Head>
 
             <div className="space-y-6">
                 <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
@@ -228,9 +234,50 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                 {template ? (
                                     <div ref={previewRef} className="relative overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
                                         <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="block w-full object-cover" />
+<<<<<<< HEAD
                                         {previewFields.map((item) => {
+=======
+                                        {[
+                                            {
+                                                key: 'nama',
+                                                label: 'Nama Peserta',
+                                                x: template.nama_x,
+                                                y: template.nama_y,
+                                                lebar: template.nama_lebar_max,
+                                                align: template.nama_alignment,
+                                                value: 'Nama Peserta Contoh',
+                                                fontSize: template.nama_font_size,
+                                                color: template.nama_color,
+                                                fontFamily: template.nama_font_family,
+                                            },
+                                            {
+                                                key: 'periode',
+                                                label: 'Periode PKL',
+                                                x: template.periode_x,
+                                                y: template.periode_y,
+                                                lebar: template.periode_lebar_max,
+                                                align: template.periode_alignment,
+                                                value: '01 Januari 2026 - 28 Februari 2026',
+                                                fontSize: template.periode_font_size,
+                                                color: template.periode_color,
+                                                fontFamily: template.periode_font_family,
+                                            },
+                                            {
+                                                key: 'tanggal',
+                                                label: 'Tanggal Tanda Tangan',
+                                                x: template.tanggal_x,
+                                                y: template.tanggal_y,
+                                                lebar: template.tanggal_lebar_max,
+                                                align: template.tanggal_alignment,
+                                                value: '28 Februari 2026',
+                                                fontSize: template.tanggal_font_size,
+                                                color: template.tanggal_color,
+                                                fontFamily: template.tanggal_font_family,
+                                            },
+                                        ].map((item) => {
+>>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
                                             const maxWidthPx = (previewWidth * item.lebar) / 100;
-                                            const { size, atMin } = fitFontSize(item.value, maxWidthPx);
+                                            const { size, atMin } = fitFontSize(item.value, maxWidthPx, item.fontSize);
 
                                             return (
                                                 <div
@@ -240,8 +287,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                                         left: `${item.x}%`,
                                                         top: `${item.y}%`,
                                                         transform: alignmentTransform(item.align),
-                                                        maxWidth: `${item.lebar}%`,
-                                                        width: 'auto',
+                                                        width: `${item.lebar}%`,
                                                         textAlign: item.align,
                                                         fontSize: `${size}px`,
                                                         lineHeight: 1.15,
@@ -249,6 +295,8 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                                         overflowWrap: 'break-word',
                                                         wordBreak: 'break-word',
                                                         whiteSpace: 'normal',
+                                                        fontFamily: item.fontFamily,
+                                                        color: item.color,
                                                     }}
                                                 >
                                                     <div className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#657085] shadow-sm">

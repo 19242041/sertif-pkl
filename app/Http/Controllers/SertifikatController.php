@@ -19,7 +19,7 @@ class SertifikatController extends Controller
 {
     private const MIN_FONT_SIZE = 10;
 
-    private const MAX_FONT_SIZE = 40;
+    private const MAX_FONT_SIZE = 120;
 
     /**
      * Halaman "Terbitkan Sertifikat" beserta riwayat sertifikat.
@@ -96,6 +96,7 @@ class SertifikatController extends Controller
 
         $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
 
+<<<<<<< HEAD
         /*
          * Hitung ukuran font berdasarkan template.
          * "asal" (Asal Sekolah) ikut dihitung independen sama seperti field lain.
@@ -118,6 +119,31 @@ class SertifikatController extends Controller
                 (float) $template->tanggal_lebar_max
             ],
         ]);
+=======
+    /*
+     * Hitung ukuran font berdasarkan template.
+     */
+    $fit = $this->autoFit([
+        'nama' => [
+            $teksNama,
+            (float) $template->nama_lebar_max,
+            (float) $template->nama_font_size,
+            $template->nama_font_family,
+        ],
+        'periode' => [
+            $teksPeriode,
+            (float) $template->periode_lebar_max,
+            (float) $template->periode_font_size,
+            $template->periode_font_family,
+        ],
+        'tanggal' => [
+            $teksTanggal,
+            (float) $template->tanggal_lebar_max,
+            (float) $template->tanggal_font_size,
+            $template->tanggal_font_family,
+        ],
+    ]);
+>>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
 
         /*
          * AMBIL FILE TEMPLATE ASLI
@@ -317,16 +343,15 @@ class SertifikatController extends Controller
         $fontMetrics = $dompdf->getFontMetrics();
         $canvasWidthPt = $dompdf->getCanvas()->get_width();
 
-        /** @var string|null $font */
-        $font = $fontMetrics->getFont('DejaVu Sans');
-
         $sizes = [];
         $warnings = [];
 
-        foreach ($fields as $key => [$text, $maxWidthPercent]) {
+        foreach ($fields as $key => [$text, $maxWidthPercent, $targetSize, $fontFamily]) {
             $maxWidthPt = ($canvasWidthPt * $maxWidthPercent) / 100;
-            $size = self::MAX_FONT_SIZE;
+            $size = min(max($targetSize, self::MIN_FONT_SIZE), self::MAX_FONT_SIZE);
             $hitMinimum = false;
+
+            $font = $fontMetrics->getFont($this->resolveFontFamily($fontMetrics, $fontFamily));
 
             while ($size > self::MIN_FONT_SIZE) {
                 $widthPt = $fontMetrics->getTextWidth($text, $font, $size * 0.75);
@@ -335,7 +360,7 @@ class SertifikatController extends Controller
                     break;
                 }
 
-                $size--;
+                $size -= 0.5;
             }
 
             if ($size <= self::MIN_FONT_SIZE && $fontMetrics->getTextWidth($text, $font, self::MIN_FONT_SIZE * 0.75) > $maxWidthPt) {
@@ -343,7 +368,7 @@ class SertifikatController extends Controller
                 $hitMinimum = true;
             }
 
-            $sizes[$key] = $size;
+            $sizes[$key] = round($size, 1);
 
             if ($hitMinimum) {
                 $warnings[] = $key;
@@ -351,6 +376,25 @@ class SertifikatController extends Controller
         }
 
         return ['sizes' => $sizes, 'warnings' => $warnings];
+    }
+
+    private function resolveFontFamily($fontMetrics, string $fontFamily): string
+    {
+        $fontFamily = trim($fontFamily);
+
+        if ($fontFamily === 'Times New Roman') {
+            return 'Times-Roman';
+        }
+
+        if ($fontFamily === 'Luxurious Script') {
+            return 'DejaVu Sans';
+        }
+
+        if (in_array($fontFamily, ['Arial', 'DejaVu Sans'], true)) {
+            return $fontFamily;
+        }
+
+        return 'DejaVu Sans';
     }
 
     private function templateProps(TemplateSertifikat $template): array
@@ -377,7 +421,16 @@ class SertifikatController extends Controller
             'tanggal_y' => $template->tanggal_y,
             'tanggal_alignment' => $template->tanggal_alignment,
             'tanggal_lebar_max' => $template->tanggal_lebar_max,
+<<<<<<< HEAD
             'tanggal_color' => $template->tanggal_color,
+=======
+            'nama_color' => $template->nama_color,
+            'nama_font_family' => $template->nama_font_family,
+            'periode_color' => $template->periode_color,
+            'periode_font_family' => $template->periode_font_family,
+            'tanggal_color' => $template->tanggal_color,
+            'tanggal_font_family' => $template->tanggal_font_family,
+>>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
         ];
     }
 }
