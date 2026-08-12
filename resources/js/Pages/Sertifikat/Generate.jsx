@@ -4,7 +4,7 @@ import { AlertTriangle, Download, FileText, FileUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const MIN_FONT = 10;
-const MAX_FONT = 120;
+const MAX_FONT = 40;
 
 function measureText(text, fontSizePx) {
     const canvas = document.createElement('canvas');
@@ -13,20 +13,18 @@ function measureText(text, fontSizePx) {
     return ctx.measureText(text).width;
 }
 
-function fitFontSize(text, maxWidthPx, targetSize = MAX_FONT) {
+function fitFontSize(text, maxWidthPx) {
     if (!text || maxWidthPx <= 0) {
         return { size: MIN_FONT, atMin: false };
     }
 
-    const startSize = Math.min(Math.max(targetSize, MIN_FONT), MAX_FONT);
-
-    for (let size = startSize; size > MIN_FONT; size -= 0.5) {
+    for (let size = MAX_FONT; size > MIN_FONT; size -= 1) {
         if (measureText(text, size) <= maxWidthPx) {
             return { size, atMin: false };
         }
     }
 
-    return { size: MIN_FONT, atMin: measureText(text, MIN_FONT) > maxWidthPx };
+    return { size: MIN_FONT, atMin: true };
 }
 
 const alignmentTransform = (align) => (
@@ -34,11 +32,6 @@ const alignmentTransform = (align) => (
         : align === 'right' ? 'translate(-100%, -50%)'
             : 'translate(0, -50%)'
 );
-
-function formatPeriode(mulai, selesai) {
-    if (!mulai && !selesai) return '01 Januari 2026 - 28 Februari 2026';
-    return `${mulai || '-'} - ${selesai || '-'}`;
-}
 
 export default function Generate({ pesertaOptions, sertifikats, template }) {
     const form = useForm({
@@ -86,66 +79,15 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
         }
     }, [selectedPeserta]);
 
-    // 4 field yang ditimpakan ke template: Nama, Asal Sekolah, Periode, Tanggal Tanda Tangan
-    // Nilai diambil otomatis dari peserta terpilih & form — admin tidak perlu isi ulang manual.
-    const previewFields = template
-        ? [
-            {
-                key: 'nama',
-                label: 'Nama Peserta',
-                x: template.nama_x,
-                y: template.nama_y,
-                lebar: template.nama_lebar_max,
-                align: template.nama_alignment,
-                color: template.nama_color || '#1B2733',
-                value: selectedPeserta?.nama || 'Nama Peserta Contoh',
-            },
-            {
-                key: 'asal',
-                label: 'Asal Sekolah',
-                x: template.asal_x,
-                y: template.asal_y,
-                lebar: template.asal_lebar_max,
-                align: template.asal_alignment,
-                color: template.asal_color || '#1B2733',
-                value: selectedPeserta?.asal_institusi || 'SMKN 1 Karawang',
-            },
-            {
-                key: 'periode',
-                label: 'Periode PKL',
-                x: template.periode_x,
-                y: template.periode_y,
-                lebar: template.periode_lebar_max,
-                align: template.periode_alignment,
-                color: template.periode_color || '#1B2733',
-                value: formatPeriode(form.data.tanggal_mulai_pkl, form.data.tanggal_selesai_pkl),
-            },
-            {
-                key: 'tanggal',
-                label: 'Tanggal Tanda Tangan',
-                x: template.tanggal_x,
-                y: template.tanggal_y,
-                lebar: template.tanggal_lebar_max,
-                align: template.tanggal_alignment,
-                color: template.tanggal_color || '#1B2733',
-                value: form.data.tanggal_tanda_tangan ? `Karawang, ${form.data.tanggal_tanda_tangan}` : 'Karawang, 28 Februari 2026',
-            },
-        ]
-        : [];
-
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Terbitkan Sertifikat' }]}>
-            <Head title="Terbitkan Sertifikat">
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-                <link href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap" rel="stylesheet" />
-            </Head>
+            <Head title="Terbitkan Sertifikat" />
 
             <div className="space-y-6">
                 <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A0B3]">Terbitkan Sertifikat</p>
                     <h1 className="font-display mt-2 text-[26px] font-extrabold text-[#0E2A47]">Generate sertifikat dari template tersimpan</h1>
-                    <p className="mt-2 text-[14px] text-[#657085]">Pilih peserta, isi nomor dan tanggal, lalu sistem akan menghasilkan PDF otomatis dari template yang aktif. Nama dan asal sekolah otomatis mengikuti data peserta.</p>
+                    <p className="mt-2 text-[14px] text-[#657085]">Pilih peserta, isi nomor dan tanggal, lalu sistem akan menghasilkan PDF otomatis dari template yang aktif.</p>
                 </div>
 
                 <div className="grid gap-6 xl:grid-cols-[1fr_0.72fr]">
@@ -155,17 +97,10 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                 <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A0B3]">Form Generate</p>
                                 <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Isi data sertifikat</h2>
                             </div>
-                            <button type="submit" disabled={form.processing || !template} className="rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50">
+                            <button type="submit" disabled={form.processing} className="rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50">
                                 Generate Sertifikat
                             </button>
                         </div>
-
-                        {!template && (
-                            <div className="mt-4 flex items-start gap-2 rounded-[12px] border border-[#F3D2D0] bg-[#FBEAE9] px-3.5 py-3 text-[12.5px] font-medium text-[#C0433D]">
-                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                                Belum ada template sertifikat aktif. Buka menu "Kelola Template Sertifikat" untuk mengunggah desain terlebih dahulu sebelum bisa generate.
-                            </div>
-                        )}
 
                         <div className="mt-6 grid gap-4 md:grid-cols-2">
                             <label className="block md:col-span-2">
@@ -234,60 +169,24 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                 {template ? (
                                     <div ref={previewRef} className="relative overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
                                         <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="block w-full object-cover" />
-<<<<<<< HEAD
-                                        {previewFields.map((item) => {
-=======
                                         {[
-                                            {
-                                                key: 'nama',
-                                                label: 'Nama Peserta',
-                                                x: template.nama_x,
-                                                y: template.nama_y,
-                                                lebar: template.nama_lebar_max,
-                                                align: template.nama_alignment,
-                                                value: 'Nama Peserta Contoh',
-                                                fontSize: template.nama_font_size,
-                                                color: template.nama_color,
-                                                fontFamily: template.nama_font_family,
-                                            },
-                                            {
-                                                key: 'periode',
-                                                label: 'Periode PKL',
-                                                x: template.periode_x,
-                                                y: template.periode_y,
-                                                lebar: template.periode_lebar_max,
-                                                align: template.periode_alignment,
-                                                value: '01 Januari 2026 - 28 Februari 2026',
-                                                fontSize: template.periode_font_size,
-                                                color: template.periode_color,
-                                                fontFamily: template.periode_font_family,
-                                            },
-                                            {
-                                                key: 'tanggal',
-                                                label: 'Tanggal Tanda Tangan',
-                                                x: template.tanggal_x,
-                                                y: template.tanggal_y,
-                                                lebar: template.tanggal_lebar_max,
-                                                align: template.tanggal_alignment,
-                                                value: '28 Februari 2026',
-                                                fontSize: template.tanggal_font_size,
-                                                color: template.tanggal_color,
-                                                fontFamily: template.tanggal_font_family,
-                                            },
+                                            { key: 'nama', label: 'Nama Peserta', x: template.nama_x, y: template.nama_y, lebar: template.nama_lebar_max, align: template.nama_alignment, value: 'Nama Peserta Contoh' },
+                                            { key: 'periode', label: 'Periode PKL', x: template.periode_x, y: template.periode_y, lebar: template.periode_lebar_max, align: template.periode_alignment, value: '01 Januari 2026 - 28 Februari 2026' },
+                                            { key: 'tanggal', label: 'Tanggal Tanda Tangan', x: template.tanggal_x, y: template.tanggal_y, lebar: template.tanggal_lebar_max, align: template.tanggal_alignment, value: 'Karawang, 28 Februari 2026' },
                                         ].map((item) => {
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
                                             const maxWidthPx = (previewWidth * item.lebar) / 100;
-                                            const { size, atMin } = fitFontSize(item.value, maxWidthPx, item.fontSize);
+                                            const { size, atMin } = fitFontSize(item.value, maxWidthPx);
 
                                             return (
                                                 <div
                                                     key={item.key}
-                                                    className="pointer-events-none absolute"
+                                                    className="pointer-events-none absolute text-[#1B2733]"
                                                     style={{
                                                         left: `${item.x}%`,
                                                         top: `${item.y}%`,
                                                         transform: alignmentTransform(item.align),
-                                                        width: `${item.lebar}%`,
+                                                        maxWidth: `${item.lebar}%`,
+                                                        width: 'auto',
                                                         textAlign: item.align,
                                                         fontSize: `${size}px`,
                                                         lineHeight: 1.15,
@@ -295,8 +194,6 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                                         overflowWrap: 'break-word',
                                                         wordBreak: 'break-word',
                                                         whiteSpace: 'normal',
-                                                        fontFamily: item.fontFamily,
-                                                        color: item.color,
                                                     }}
                                                 >
                                                     <div className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#657085] shadow-sm">
@@ -308,7 +205,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                                             Area sempit, font minimum {MIN_FONT}px
                                                         </span>
                                                     )}
-                                                    <div className="mt-1 font-semibold" style={{ color: item.color }}>{item.value}</div>
+                                                    <div className="mt-1 font-semibold text-[#0E2A47]">{item.value}</div>
                                                 </div>
                                             );
                                         })}

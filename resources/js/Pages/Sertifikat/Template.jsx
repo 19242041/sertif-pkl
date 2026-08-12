@@ -19,7 +19,7 @@ const defaultPositions = {
     nama_color: '#f6b833',
     nama_font_family: 'Luxurious Script',
     nama_alignment: 'center',
-<<<<<<< HEAD
+
     nama_lebar_max: 55,
     nama_color: '#f6b833',
     asal_x: 50,
@@ -32,7 +32,7 @@ const defaultPositions = {
     periode_alignment: 'center',
     periode_lebar_max: 75,
     periode_color: '#111176',
-=======
+
     nama_lebar_max: 70,
     periode_x: 50,
     periode_y: 52,
@@ -41,7 +41,6 @@ const defaultPositions = {
     periode_font_family: 'Times New Roman',
     periode_alignment: 'center',
     periode_lebar_max: 65,
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
     tanggal_x: 50,
     tanggal_y: 78,
     tanggal_font_size: 13,
@@ -53,12 +52,12 @@ const defaultPositions = {
 };
 
 const fieldConfigs = [
-<<<<<<< HEAD
+
     { key: 'nama', label: 'Nama Peserta', value: 'Nama Peserta Contoh' },
     { key: 'asal', label: 'Asal Sekolah', value: 'SMKN 1 Karawang' },
     { key: 'periode', label: 'Periode PKL', value: '01 Januari 2026 - 28 Februari 2026' },
     { key: 'tanggal', label: 'Tanggal Tanda Tangan', value: 'Karawang, 28 Februari 2026' },
-=======
+
     {
         key: 'nama',
         label: 'Nama Peserta',
@@ -83,7 +82,6 @@ const fieldConfigs = [
         defaultFontSize: 13,
         defaultColor: '#111176',
     },
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
 ];
 
 const HEX_PATTERN = /^#([0-9A-Fa-f]{6})$/;
@@ -263,13 +261,12 @@ export default function Template({ template }) {
                                         const positionY = Number(form.data[`${field.key}_y`]) || 50;
                                         const lebarMax = Number(form.data[`${field.key}_lebar_max`]) || 0;
                                         const alignment = form.data[`${field.key}_alignment`];
-<<<<<<< HEAD
+
                                         const color = form.data[`${field.key}_color`] || '#1B2733';
-=======
+
                                         const fontSize = Number(form.data[`${field.key}_font_size`]) || field.defaultFontSize;
                                         const fontColor = form.data[`${field.key}_color`] || field.defaultColor;
                                         const fontFamily = form.data[`${field.key}_font_family`] || field.defaultFontFamily;
->>>>>>> 3bb9cb7891f17e44bd23793f456857729951a19e
                                         const maxWidthPx = (previewWidth * lebarMax) / 100;
                                         const { atMin } = fitFontSize(field.value, maxWidthPx, fontSize);
 
