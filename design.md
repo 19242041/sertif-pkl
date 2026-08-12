@@ -120,11 +120,11 @@ Aplikasi ini adalah **alat kerja internal** untuk 1 admin, bukan situs publik. P
 - Tabel "Riwayat Sertifikat" di bawah form: kolom No, Nama Peserta, Nomor Sertifikat, Tanggal, ikon File, aksi unduh — isinya hasil generate, bukan file upload manual.
 
 ### 5.7a Template Sertifikat
-- Panel kiri/tengah: preview besar template desain sertifikat yang sedang aktif, dengan overlay 3 kotak penanda posisi (Nama Peserta, Periode PKL, Tanggal) yang bisa digeser atau diatur lewat input koordinat.
-- Panel kanan: form upload/ganti file template (drag & drop, border putus-putus, ikon upload cloud — pola yang sama seperti drop zone lama), dan input numerik untuk posisi X/Y, ukuran font, serta pilihan perataan teks (kiri/tengah/kanan) untuk tiap elemen.
+- Panel kiri/tengah: preview besar template desain sertifikat yang sedang aktif, dengan overlay 4 kotak penanda posisi (Nama Peserta, Asal Sekolah, Periode PKL, Tanggal) yang bisa digeser atau diatur lewat input koordinat.
+- Panel kanan: form upload/ganti file template (drag & drop, border putus-putus, ikon upload cloud — pola yang sama seperti drop zone lama), dan untuk tiap elemen: input numerik posisi X/Y, ukuran font, pilihan perataan teks (kiri/tengah/kanan), dan **color picker warna teks** yang bisa diisi lewat swatch visual ATAU input kode hex langsung (contoh: `#111176`) — dua cara input ini saling sinkron (ubah lewat swatch, kode hex ikut update, dan sebaliknya).
 - Tombol primary "Simpan Pengaturan Posisi" di bagian bawah panel kanan.
-- Live preview: saat admin mengubah angka posisi, teks contoh ("Nama Peserta Contoh", "01 Januari 2025 - 28 Februari 2025", "Karawang, 28 Februari 2025") langsung bergeser di atas preview template sebelah kiri.
-- Elemen (Nama Peserta, Periode PKL, Tanggal) tetap selectable, bisa digeser (drag), dan kotak teksnya bisa di-resize lewat handle — bukan cuma titik posisi tunggal, supaya teks panjang (nama peserta) tidak terpotong.
+- Live preview: saat admin mengubah angka posisi, teks contoh ("Nama Peserta Contoh", "SMKN 1 Karawang", "01 Januari 2025 - 28 Februari 2025", "Karawang, 28 Februari 2025") langsung bergeser di atas preview template sebelah kiri.
+- Elemen (Nama Peserta, Asal Sekolah, Periode PKL, Tanggal) tetap selectable, bisa digeser (drag), dan kotak teksnya bisa di-resize lewat handle — bukan cuma titik posisi tunggal, supaya teks panjang (nama peserta, nama sekolah) tidak terpotong.
 - Konfigurasi terakhir (posisi, ukuran, font, warna, alignment, lebar/tinggi kotak) yang disimpan lewat "Simpan Template" otomatis dipakai setiap kali admin generate sertifikat — admin tidak perlu mengatur ulang posisi tiap generate.
 
 ### 5.7b Spesifikasi Default Template Sertifikat
@@ -134,6 +134,7 @@ Nilai berikut adalah **starting point default** saat template baru pertama kali 
 | Elemen | Font | Ukuran | Warna | Alignment |
 |---|---|---|---|---|
 | Nama Peserta | Luxurious Script | 80px | `#f6b833` | Center |
+| Asal Sekolah | Times New Roman | 16px | `#111176` | Center |
 | Periode PKL | Times New Roman | 18.6px | `#111176` | Center |
 | Tanggal Tanda Tangan | Times New Roman | 13.1px | `#111176` | Center |
 

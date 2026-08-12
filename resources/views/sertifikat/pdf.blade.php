@@ -43,7 +43,6 @@
 
         .field {
             position: absolute;
-            color: #1b2733;
             line-height: 1.15;
             margin: 0;
             padding: 0;
@@ -76,6 +75,7 @@
             top: {{ $template->nama_y }}%;
             max-width: {{ $template->nama_lebar_max }}%;
             font-size: {{ $fontSizes['nama'] }}px;
+            color: {{ $colors['nama'] }};
             text-align: {{ $template->nama_alignment }};
             transform: translate(
                 {{ $template->nama_alignment === 'center'
@@ -91,6 +91,30 @@
         {{ $namaPeserta }}
     </div>
 
+    {{-- ASAL SEKOLAH --}}
+    <div
+        class="field"
+        style="
+            left: {{ $template->asal_x }}%;
+            top: {{ $template->asal_y }}%;
+            max-width: {{ $template->asal_lebar_max }}%;
+            font-size: {{ $fontSizes['asal'] }}px;
+            color: {{ $colors['asal'] }};
+            text-align: {{ $template->asal_alignment }};
+            transform: translate(
+                {{ $template->asal_alignment === 'center'
+                    ? '-50%'
+                    : ($template->asal_alignment === 'right'
+                        ? '-100%'
+                        : '0')
+                }},
+                -50%
+            );
+        "
+    >
+        {{ $asalText }}
+    </div>
+
     {{-- PERIODE PKL --}}
     <div
         class="field"
@@ -99,6 +123,7 @@
             top: {{ $template->periode_y }}%;
             max-width: {{ $template->periode_lebar_max }}%;
             font-size: {{ $fontSizes['periode'] }}px;
+            color: {{ $colors['periode'] }};
             text-align: {{ $template->periode_alignment }};
             transform: translate(
                 {{ $template->periode_alignment === 'center'
@@ -122,6 +147,7 @@
             top: {{ $template->tanggal_y }}%;
             max-width: {{ $template->tanggal_lebar_max }}%;
             font-size: {{ $fontSizes['tanggal'] }}px;
+            color: {{ $colors['tanggal'] }};
             text-align: {{ $template->tanggal_alignment }};
             transform: translate(
                 {{ $template->tanggal_alignment === 'center'

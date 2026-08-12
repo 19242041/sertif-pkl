@@ -72,197 +72,211 @@ class SertifikatController extends Controller
     }
 
     public function store(StoreGeneratedSertifikatRequest $request): RedirectResponse
-{
-    $template = TemplateSertifikat::query()
-        ->where('is_active', true)
-        ->latest()
-        ->firstOrFail();
+    {
+        $template = TemplateSertifikat::query()
+            ->where('is_active', true)
+            ->latest()
+            ->firstOrFail();
 
-    $peserta = PesertaPkl::query()
-        ->findOrFail($request->integer('peserta_pkl_id'));
+        $peserta = PesertaPkl::query()
+            ->findOrFail($request->integer('peserta_pkl_id'));
 
-    $tanggalMulai = $request->date('tanggal_mulai_pkl') ?? $peserta->tanggal_mulai;
-    $tanggalSelesai = $request->date('tanggal_selesai_pkl') ?? $peserta->tanggal_selesai;
-    $tanggalTandaTangan = $request->date('tanggal_tanda_tangan');
+        $tanggalMulai = $request->date('tanggal_mulai_pkl') ?? $peserta->tanggal_mulai;
+        $tanggalSelesai = $request->date('tanggal_selesai_pkl') ?? $peserta->tanggal_selesai;
+        $tanggalTandaTangan = $request->date('tanggal_tanda_tangan');
 
-    $teksNama = $peserta->nama;
+        $teksNama = $peserta->nama;
+        $teksAsal = $peserta->asal_institusi;
 
-    $teksPeriode = sprintf(
-        '%s - %s',
-        optional($tanggalMulai)->format('d M Y'),
-        optional($tanggalSelesai)->format('d M Y')
-    );
+        $teksPeriode = sprintf(
+            '%s - %s',
+            optional($tanggalMulai)->format('d M Y'),
+            optional($tanggalSelesai)->format('d M Y')
+        );
 
-    $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
+        $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
 
-    /*
-     * Hitung ukuran font berdasarkan template.
-     */
-    $fit = $this->autoFit([
-        'nama' => [
-            $teksNama,
-            (float) $template->nama_lebar_max
-        ],
-        'periode' => [
-            $teksPeriode,
-            (float) $template->periode_lebar_max
-        ],
-        'tanggal' => [
-            $teksTanggal,
-            (float) $template->tanggal_lebar_max
-        ],
-    ]);
+        /*
+         * Hitung ukuran font berdasarkan template.
+         * "asal" (Asal Sekolah) ikut dihitung independen sama seperti field lain.
+         */
+        $fit = $this->autoFit([
+            'nama' => [
+                $teksNama,
+                (float) $template->nama_lebar_max
+            ],
+            'asal' => [
+                $teksAsal,
+                (float) $template->asal_lebar_max
+            ],
+            'periode' => [
+                $teksPeriode,
+                (float) $template->periode_lebar_max
+            ],
+            'tanggal' => [
+                $teksTanggal,
+                (float) $template->tanggal_lebar_max
+            ],
+        ]);
 
-    /*
-     * AMBIL FILE TEMPLATE ASLI
-     * Jangan gunakan Base64 karena sebelumnya gambar tidak muncul
-     * di hasil PDF.
-     */
-    $templateImagePath = Storage::disk('public')->path(
-        $template->file_path
-    );
+        /*
+         * AMBIL FILE TEMPLATE ASLI
+         * Jangan gunakan Base64 karena sebelumnya gambar tidak muncul
+         * di hasil PDF.
+         */
+        $templateImagePath = Storage::disk('public')->path(
+            $template->file_path
+        );
 
-    if (! file_exists($templateImagePath)) {
-        return redirect()
-            ->back()
-            ->withErrors([
-                'template' => 'File template tidak ditemukan: ' . $template->file_path
-            ]);
-    }
-
-    /*
-     * Gunakan file:// supaya DomPDF membaca gambar langsung
-     * dari storage.
-     */
-    $templateImage = 'file://' . str_replace(
-        '\\',
-        '/',
-        $templateImagePath
-    );
-
-    /*
-     * Generate PDF dengan rasio 16:9 sesuai template.
-     */
-    $pdf = Pdf::loadView('sertifikat.pdf', [
-        'templateImage' => $templateImage,
-        'namaPeserta' => $teksNama,
-        'periodeText' => $teksPeriode,
-        'tanggalText' => $teksTanggal,
-        'template' => $template,
-        'fontSizes' => $fit['sizes'],
-    ]);
-
-    /*
-     * Ukuran 16:9.
-     * 1152 x 648 point = rasio 16:9.
-     */
-    $pdf->setPaper([0, 0, 1152, 648]);
-
-    /*
-     * Pastikan DomPDF boleh membaca file lokal.
-     */
-    $dompdf = $pdf->getDomPDF();
-
-    $dompdf->getOptions()->set([
-        'isRemoteEnabled' => true,
-        'isHtml5ParserEnabled' => true,
-        'chroot' => base_path(),
-    ]);
-
-    $filePath = 'sertifikat/'
-        . now()->format('Y/m')
-        . '/'
-        . str()->uuid()
-        . '.pdf';
-
-    Storage::disk('public')->put(
-        $filePath,
-        $pdf->output()
-    );
-
-    Sertifikat::create([
-        'peserta_pkl_id' => $peserta->id,
-        'nomor_sertifikat' => $request
-            ->string('nomor_sertifikat')
-            ->toString(),
-        'tanggal_sertifikat' => $tanggalTandaTangan,
-        'file_path' => $filePath,
-        'generated_at' => now(),
-    ]);
-
-    $status = 'Sertifikat berhasil digenerate.';
-
-    if ($fit['warnings']) {
-        $status .= ' Catatan: area '
-            . implode(', ', $fit['warnings'])
-            . ' terlalu sempit sehingga memakai ukuran font minimum ('
-            . self::MIN_FONT_SIZE
-            . 'px).';
-    }
-
-    return redirect()
-        ->route('sertifikat.index')
-        ->with('status', $status);
-}
-
-    public function storeTemplate(StoreTemplateSertifikatRequest $request): RedirectResponse
-{
-    $validated = $request->validated();
-
-    $template = TemplateSertifikat::query()
-        ->where('is_active', true)
-        ->latest()
-        ->first();
-
-    /*
-     * Kalau upload gambar baru, simpan gambar ke storage/public.
-     */
-    if ($request->hasFile('template')) {
-        // Hapus gambar template lama kalau ada
-        if ($template && $template->file_path) {
-            Storage::disk('public')->delete($template->file_path);
+        if (! file_exists($templateImagePath)) {
+            return redirect()
+                ->back()
+                ->withErrors([
+                    'template' => 'File template tidak ditemukan: ' . $template->file_path
+                ]);
         }
 
-        $filePath = $request->file('template')->store(
-            'sertifikat/template',
-            'public'
+        /*
+         * Gunakan file:// supaya DomPDF membaca gambar langsung
+         * dari storage.
+         */
+        $templateImage = 'file://' . str_replace(
+            '\\',
+            '/',
+            $templateImagePath
         );
-    } elseif ($template) {
-        // Kalau tidak upload baru, tetap gunakan template lama
-        $filePath = $template->file_path;
-    } else {
-        return back()
-            ->withErrors([
-                'template' => 'Silakan upload gambar template sertifikat terlebih dahulu.'
-            ])
-            ->withInput();
+
+        /*
+         * Generate PDF dengan rasio 16:9 sesuai template.
+         * "asalText" dan warna tiap field (dari template) ikut dikirim ke view.
+         */
+        $pdf = Pdf::loadView('sertifikat.pdf', [
+            'templateImage' => $templateImage,
+            'namaPeserta' => $teksNama,
+            'asalText' => $teksAsal,
+            'periodeText' => $teksPeriode,
+            'tanggalText' => $teksTanggal,
+            'template' => $template,
+            'fontSizes' => $fit['sizes'],
+            'colors' => [
+                'nama' => $template->nama_color,
+                'asal' => $template->asal_color,
+                'periode' => $template->periode_color,
+                'tanggal' => $template->tanggal_color,
+            ],
+        ]);
+
+        /*
+         * Ukuran 16:9.
+         * 1152 x 648 point = rasio 16:9.
+         */
+        $pdf->setPaper([0, 0, 1152, 648]);
+
+        /*
+         * Pastikan DomPDF boleh membaca file lokal.
+         */
+        $dompdf = $pdf->getDomPDF();
+
+        $dompdf->getOptions()->set([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+            'chroot' => base_path(),
+        ]);
+
+        $filePath = 'sertifikat/'
+            . now()->format('Y/m')
+            . '/'
+            . str()->uuid()
+            . '.pdf';
+
+        Storage::disk('public')->put(
+            $filePath,
+            $pdf->output()
+        );
+
+        Sertifikat::create([
+            'peserta_pkl_id' => $peserta->id,
+            'nomor_sertifikat' => $request
+                ->string('nomor_sertifikat')
+                ->toString(),
+            'tanggal_sertifikat' => $tanggalTandaTangan,
+            'file_path' => $filePath,
+            'generated_at' => now(),
+        ]);
+
+        $status = 'Sertifikat berhasil digenerate.';
+
+        if ($fit['warnings']) {
+            $status .= ' Catatan: area '
+                . implode(', ', $fit['warnings'])
+                . ' terlalu sempit sehingga memakai ukuran font minimum ('
+                . self::MIN_FONT_SIZE
+                . 'px).';
+        }
+
+        return redirect()
+            ->route('sertifikat.index')
+            ->with('status', $status);
     }
 
-    unset($validated['template']);
+    public function storeTemplate(StoreTemplateSertifikatRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
 
-    $validated['file_path'] = $filePath;
-    $validated['is_active'] = true;
+        $template = TemplateSertifikat::query()
+            ->where('is_active', true)
+            ->latest()
+            ->first();
 
-    /*
-     * Nonaktifkan template lama.
-     */
-    TemplateSertifikat::query()->update([
-        'is_active' => false,
-    ]);
+        /*
+         * Kalau upload gambar baru, simpan gambar ke storage/public.
+         */
+        if ($request->hasFile('template')) {
+            // Hapus gambar template lama kalau ada
+            if ($template && $template->file_path) {
+                Storage::disk('public')->delete($template->file_path);
+            }
 
-    /*
-     * Simpan template baru / update template aktif.
-     */
-    if ($template) {
-        $template->update($validated);
-    } else {
-        TemplateSertifikat::create($validated);
+            $filePath = $request->file('template')->store(
+                'sertifikat/template',
+                'public'
+            );
+        } elseif ($template) {
+            // Kalau tidak upload baru, tetap gunakan template lama
+            $filePath = $template->file_path;
+        } else {
+            return back()
+                ->withErrors([
+                    'template' => 'Silakan upload gambar template sertifikat terlebih dahulu.'
+                ])
+                ->withInput();
+        }
+
+        unset($validated['template']);
+
+        $validated['file_path'] = $filePath;
+        $validated['is_active'] = true;
+
+        /*
+         * Nonaktifkan template lama.
+         */
+        TemplateSertifikat::query()->update([
+            'is_active' => false,
+        ]);
+
+        /*
+         * Simpan template baru / update template aktif.
+         */
+        if ($template) {
+            $template->update($validated);
+        } else {
+            TemplateSertifikat::create($validated);
+        }
+
+        return redirect()
+            ->route('sertifikat.template')
+            ->with('status', 'Template sertifikat berhasil disimpan.');
     }
-
-    return redirect()
-        ->route('sertifikat.template')
-        ->with('status', 'Template sertifikat berhasil disimpan.');
-}
 
     public function download(Sertifikat $sertifikat)
     {
@@ -294,7 +308,7 @@ class SertifikatController extends Controller
             <meta charset="UTF-8">
             <body style="font-family: DejaVu Sans, sans-serif;">x</body>
             </html>'
-);
+        );
 
         $preheat->setPaper([0, 0, 1152, 648]);
         $dompdf = $preheat->getDompdf();
@@ -348,14 +362,22 @@ class SertifikatController extends Controller
             'nama_y' => $template->nama_y,
             'nama_alignment' => $template->nama_alignment,
             'nama_lebar_max' => $template->nama_lebar_max,
+            'nama_color' => $template->nama_color,
+            'asal_x' => $template->asal_x,
+            'asal_y' => $template->asal_y,
+            'asal_alignment' => $template->asal_alignment,
+            'asal_lebar_max' => $template->asal_lebar_max,
+            'asal_color' => $template->asal_color,
             'periode_x' => $template->periode_x,
             'periode_y' => $template->periode_y,
             'periode_alignment' => $template->periode_alignment,
             'periode_lebar_max' => $template->periode_lebar_max,
+            'periode_color' => $template->periode_color,
             'tanggal_x' => $template->tanggal_x,
             'tanggal_y' => $template->tanggal_y,
             'tanggal_alignment' => $template->tanggal_alignment,
             'tanggal_lebar_max' => $template->tanggal_lebar_max,
+            'tanggal_color' => $template->tanggal_color,
         ];
     }
 }

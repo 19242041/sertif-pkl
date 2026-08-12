@@ -10,21 +10,32 @@ const defaultPositions = {
     nama_y: 35,
     nama_alignment: 'center',
     nama_lebar_max: 55,
+    nama_color: '#f6b833',
+    asal_x: 50,
+    asal_y: 45,
+    asal_alignment: 'center',
+    asal_lebar_max: 65,
+    asal_color: '#111176',
     periode_x: 50,
-    periode_y: 50,
+    periode_y: 55,
     periode_alignment: 'center',
     periode_lebar_max: 75,
+    periode_color: '#111176',
     tanggal_x: 50,
     tanggal_y: 80,
     tanggal_alignment: 'center',
     tanggal_lebar_max: 55,
+    tanggal_color: '#111176',
 };
 
 const fieldConfigs = [
     { key: 'nama', label: 'Nama Peserta', value: 'Nama Peserta Contoh' },
+    { key: 'asal', label: 'Asal Sekolah', value: 'SMKN 1 Karawang' },
     { key: 'periode', label: 'Periode PKL', value: '01 Januari 2026 - 28 Februari 2026' },
     { key: 'tanggal', label: 'Tanggal Tanda Tangan', value: 'Karawang, 28 Februari 2026' },
 ];
+
+const HEX_PATTERN = /^#([0-9A-Fa-f]{6})$/;
 
 function measureText(text, fontSizePx) {
     const canvas = document.createElement('canvas');
@@ -59,6 +70,7 @@ export default function Template({ template }) {
     const [previewUrl, setPreviewUrl] = useState(template ? `/storage/${template.file_path}` : '');
     const [usePreviousSettings, setUsePreviousSettings] = useState(Boolean(template));
     const [draggingField, setDraggingField] = useState(null);
+    const [hexErrors, setHexErrors] = useState({});
     const previewRef = useRef(null);
     const [previewWidth, setPreviewWidth] = useState(0);
 
@@ -124,22 +136,40 @@ export default function Template({ template }) {
         }
     };
 
+    // Sinkronisasi color picker (swatch) <-> input teks kode hex untuk 1 field
+    const handleColorPicker = (fieldKey, value) => {
+        form.setData(`${fieldKey}_color`, value);
+        setHexErrors((prev) => ({ ...prev, [fieldKey]: false }));
+    };
+
+    const handleHexInput = (fieldKey, rawValue) => {
+        let value = rawValue.trim();
+        if (value && !value.startsWith('#')) value = `#${value}`;
+
+        form.setData(`${fieldKey}_color`, value);
+
+        const isValid = HEX_PATTERN.test(value);
+        setHexErrors((prev) => ({ ...prev, [fieldKey]: !isValid }));
+    };
+
     const submit = (event) => {
-    event.preventDefault();
+        event.preventDefault();
 
-    console.log('DATA YANG DIKIRIM:', form.data);
+        // Validasi semua kode hex sebelum submit
+        const invalidField = fieldConfigs.find(
+            (field) => !HEX_PATTERN.test(form.data[`${field.key}_color`] || '')
+        );
 
-    form.post(route('sertifikat.template.store'), {
-        forceFormData: true,
-        preserveScroll: true,
-        onSuccess: () => {
-            console.log('BERHASIL SIMPAN');
-        },
-        onError: (errors) => {
-            console.log('ERROR VALIDASI:', errors);
-        },
-    });
-};
+        if (invalidField) {
+            setHexErrors((prev) => ({ ...prev, [invalidField.key]: true }));
+            return;
+        }
+
+        form.post(route('sertifikat.template.store'), {
+            forceFormData: true,
+            preserveScroll: true,
+        });
+    };
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Kelola Template Sertifikat' }]}>
@@ -176,6 +206,7 @@ export default function Template({ template }) {
                                         const positionY = Number(form.data[`${field.key}_y`]) || 50;
                                         const lebarMax = Number(form.data[`${field.key}_lebar_max`]) || 0;
                                         const alignment = form.data[`${field.key}_alignment`];
+                                        const color = form.data[`${field.key}_color`] || '#1B2733';
                                         const maxWidthPx = (previewWidth * lebarMax) / 100;
                                         const { size, atMin } = fitFontSize(field.value, maxWidthPx);
 
@@ -191,13 +222,14 @@ export default function Template({ template }) {
                                                     {field.label}
                                                 </div>
                                                 <div
-                                                    className="mt-1 text-[#1B2733] font-semibold"
+                                                    className="mt-1 font-semibold"
                                                     style={{
                                                         maxWidth: `${lebarMax}%`,
                                                         width: 'auto',
                                                         fontSize: `${size}px`,
                                                         lineHeight: 1.15,
                                                         textAlign: alignment,
+                                                        color,
                                                         boxSizing: 'border-box',
                                                         overflowWrap: 'break-word',
                                                         wordBreak: 'break-word',
@@ -241,7 +273,7 @@ export default function Template({ template }) {
                     <div className="space-y-6 rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
                         <div>
                             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A0B3]">Pengaturan Field</p>
-                            <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Posisi, lebar area, dan perataan</h2>
+                            <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Posisi, lebar area, warna, dan perataan</h2>
                         </div>
 
                         <div className="space-y-5">
@@ -249,6 +281,8 @@ export default function Template({ template }) {
                                 const lebarMax = Number(form.data[`${field.key}_lebar_max`]) || 0;
                                 const maxWidthPx = (previewWidth * lebarMax) / 100;
                                 const { size, atMin } = fitFontSize(field.value, maxWidthPx);
+                                const colorValue = form.data[`${field.key}_color`] || '#1B2733';
+                                const isHexInvalid = hexErrors[field.key];
 
                                 return (
                                     <div key={field.key} className="rounded-[24px] border border-[#E4E9F0] bg-[#F7F9FC] p-4">
@@ -281,6 +315,30 @@ export default function Template({ template }) {
                                                     <input type="range" min="10" max="100" step="0.5" value={lebarMax} onChange={(e) => form.setData(`${field.key}_lebar_max`, e.target.value)} className="w-full accent-[#1B63B0]" />
                                                     <input type="number" min="1" max="100" step="0.5" value={form.data[`${field.key}_lebar_max`]} onChange={(e) => form.setData(`${field.key}_lebar_max`, e.target.value)} className="block w-24 rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
                                                 </div>
+                                            </label>
+                                            <label className="block sm:col-span-2">
+                                                <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Warna Teks</span>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="color"
+                                                        value={HEX_PATTERN.test(colorValue) ? colorValue : '#1B2733'}
+                                                        onChange={(e) => handleColorPicker(field.key, e.target.value)}
+                                                        className="h-[38px] w-[44px] shrink-0 cursor-pointer rounded-[8px] border border-[#E4E9F0] bg-white p-1"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={colorValue}
+                                                        onChange={(e) => handleHexInput(field.key, e.target.value)}
+                                                        placeholder="#111176"
+                                                        maxLength={7}
+                                                        className={`block w-full rounded-[10px] border bg-white px-3.5 py-[10px] font-mono text-[13px] outline-none focus:ring-4 ${isHexInvalid ? 'border-[#C0433D] focus:border-[#C0433D] focus:ring-[#C0433D]/12' : 'border-[#E4E9F0] focus:border-[#1B63B0] focus:ring-[#1B63B0]/12'}`}
+                                                    />
+                                                </div>
+                                                {isHexInvalid && (
+                                                    <p className="mt-1.5 text-[11.5px] font-medium text-[#C0433D]">
+                                                        Format kode warna harus #RRGGBB, contoh: #111176
+                                                    </p>
+                                                )}
                                             </label>
                                             <label className="block sm:col-span-2">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Perataan</span>
