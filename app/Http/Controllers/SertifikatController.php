@@ -138,25 +138,41 @@ class SertifikatController extends Controller
         );
 
         /*
+         * Hitung posisi tiap teks agar PAS dengan titik (anchor) X/Y yang
+         * diatur di "Kelola Sertifikat". DomPDF tidak mendukung CSS transform,
+         * jadi perataan center/kanan dan perataan vertikal dihitung manual
+         * dari lebar/tinggi teks lewat FontMetrics DomPDF.
+         */
+        $colors = [
+            'nomor' => $template->nomor_color,
+            'nama' => $template->nama_color,
+            'asal' => $template->asal_color,
+            'periode' => $template->periode_color,
+            'tanggal' => $template->tanggal_color,
+        ];
+
+        $texts = [
+            'nomor' => $teksNomor,
+            'nama' => $teksNama,
+            'asal' => $teksAsal,
+            'periode' => $teksPeriode,
+            'tanggal' => $teksTanggal,
+        ];
+
+        $fields = $this->computeFieldPositions(
+            $texts,
+            $fontSizes,
+            $colors,
+            $template
+        );
+
+        /*
          * Generate PDF dengan rasio 16:9 sesuai template.
-         * "asalText" dan warna tiap field (dari template) ikut dikirim ke view.
+         * "fields" berisi posisi/ukuran/warna hasil perhitungan di atas.
          */
         $pdf = Pdf::loadView('sertifikat.pdf', [
             'templateImage' => $templateImage,
-            'nomorText' => $teksNomor,
-            'namaPeserta' => $teksNama,
-            'asalText' => $teksAsal,
-            'periodeText' => $teksPeriode,
-            'tanggalText' => $teksTanggal,
-            'template' => $template,
-            'fontSizes' => $fontSizes,
-            'colors' => [
-                'nomor' => $template->nomor_color,
-                'nama' => $template->nama_color,
-                'asal' => $template->asal_color,
-                'periode' => $template->periode_color,
-                'tanggal' => $template->tanggal_color,
-            ],
+            'fields' => $fields,
         ]);
 
         /*
@@ -284,6 +300,100 @@ class SertifikatController extends Controller
         $sertifikat->delete();
 
         return redirect()->route('sertifikat.index')->with('status', 'Sertifikat berhasil dihapus.');
+    }
+
+    /*
+     * Hitung koordinat (pt) tiap field dari anchor X/Y (persen) di template.
+     * Mengukur lebar teks dengan FontMetrics DomPDF karena transform CSS tidak
+     * didukung — center/right dan perataan vertikal dihitung manual.
+     */
+    private function computeFieldPositions(
+        array $texts,
+        array $fontSizes,
+        array $colors,
+        TemplateSertifikat $template
+    ): array {
+        $pageWidth = 1152;
+        $pageHeight = 648;
+
+        $preheat = Pdf::loadHTML(
+            '<!DOCTYPE html>
+            <html>
+            <meta charset="UTF-8">
+            <body style="font-family: DejaVu Sans, sans-serif;">x</body>
+            </html>'
+        );
+
+        $preheat->setPaper([0, 0, $pageWidth, $pageHeight]);
+        $preheatDompdf = $preheat->getDompdf();
+        $preheatDompdf->render();
+
+        $fontMetrics = $preheatDompdf->getFontMetrics();
+        $fonts = [];
+
+        $fields = [];
+
+        foreach ($texts as $key => $text) {
+            $x = (float) $template->{$key.'_x'};
+            $y = (float) $template->{$key.'_y'};
+            $lebarMax = (float) $template->{$key.'_lebar_max'};
+            $alignment = $template->{$key.'_alignment'};
+            $fontPx = $fontSizes[$key];
+            $fontPt = $fontPx * 0.75;
+
+            $family = $this->pdfFontFamily($template->{$key.'_font_family'});
+            $fonts[$family] ??= $fontMetrics->getFont($family);
+
+            $textWidth = $fontMetrics->getTextWidth($text, $fonts[$family], $fontPt);
+            $maxWidthPt = $lebarMax / 100 * $pageWidth;
+            $boxWidth = min($textWidth, $maxWidthPt);
+            $lineCount = ($maxWidthPt > 0 && $textWidth > $maxWidthPt)
+                ? (int) ceil($textWidth / $maxWidthPt)
+                : 1;
+
+            $anchorX = $x / 100 * $pageWidth;
+            $anchorY = $y / 100 * $pageHeight;
+            $boxHeight = $lineCount * $fontPt * 1.15;
+
+            $left = $anchorX - match ($alignment) {
+                'center' => $boxWidth / 2,
+                'right' => $boxWidth,
+                default => 0,
+            };
+
+            $top = $anchorY - $boxHeight / 2;
+
+            $left = max(0, (float) min($left, $pageWidth - $boxWidth));
+            $top = max(0, (float) min($top, $pageHeight - $boxHeight));
+
+            $fields[$key] = [
+                'text' => $text,
+                'left' => round($left, 2),
+                'top' => round($top, 2),
+                'width' => round($boxWidth, 2),
+                'font_size' => $fontPx,
+                'font_family' => $family,
+                'color' => $colors[$key],
+                'alignment' => $alignment,
+            ];
+        }
+
+        return $fields;
+    }
+
+    /*
+     * Petakan nama font template ke font yang benar-benar dikenal DomPDF.
+     */
+    private function pdfFontFamily(string $family): string
+    {
+        return match (strtolower(trim($family))) {
+            'times new roman' => 'Times',
+            'arial' => 'Helvetica',
+            'courier new' => 'Courier',
+            'dejavu serif' => 'DejaVu Serif',
+            'dejavu sans mono' => 'DejaVu Sans Mono',
+            default => 'DejaVu Sans',
+        };
     }
 
     private function templateProps(TemplateSertifikat $template): array
