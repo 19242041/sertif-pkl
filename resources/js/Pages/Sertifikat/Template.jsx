@@ -11,40 +11,15 @@ const fontOptions = [
 ];
 
 const defaultPositions = {
-    nama_x: 50,
-    nama_y: 35,
-    nama_font_size: 80,
-    nama_font_family: 'Luxurious Script',
-    nama_color: '#f6b833',
-    nama_alignment: 'center',
-    nama_lebar_max: 55,
-
-    asal_x: 50,
-    asal_y: 45,
-    asal_font_size: 16,
-    asal_font_family: 'Times New Roman',
-    asal_color: '#111176',
-    asal_alignment: 'center',
-    asal_lebar_max: 65,
-
-    periode_x: 50,
-    periode_y: 55,
-    periode_font_size: 19,
-    periode_font_family: 'Times New Roman',
-    periode_color: '#111176',
-    periode_alignment: 'center',
-    periode_lebar_max: 65,
-
-    tanggal_x: 50,
-    tanggal_y: 78,
-    tanggal_font_size: 13,
-    tanggal_font_family: 'Times New Roman',
-    tanggal_color: '#111176',
-    tanggal_alignment: 'center',
-    tanggal_lebar_max: 55,
+    nama_x: 50, nama_y: 35, nama_font_size: 80, nama_font_family: 'Luxurious Script', nama_color: '#f6b833', nama_alignment: 'center', nama_lebar_max: 55,
+    asal_x: 50, asal_y: 45, asal_font_size: 16, asal_font_family: 'Times New Roman', asal_color: '#111176', asal_alignment: 'center', asal_lebar_max: 65,
+    nomor_x: 50, nomor_y: 20, nomor_font_size: 14, nomor_font_family: 'Times New Roman', nomor_color: '#111176', nomor_alignment: 'center', nomor_lebar_max: 65,
+    periode_x: 50, periode_y: 55, periode_font_size: 19, periode_font_family: 'Times New Roman', periode_color: '#111176', periode_alignment: 'center', periode_lebar_max: 65,
+    tanggal_x: 50, tanggal_y: 78, tanggal_font_size: 13, tanggal_font_family: 'Times New Roman', tanggal_color: '#111176', tanggal_alignment: 'center', tanggal_lebar_max: 55,
 };
 
 const fieldConfigs = [
+    { key: 'nomor', label: 'Nomor Sertifikat', value: 'PKL/UPTD/WIL2/2026/001' },
     { key: 'nama', label: 'Nama Peserta', value: 'Nama Peserta Contoh' },
     { key: 'asal', label: 'Asal Sekolah', value: 'SMKN 1 Karawang' },
     { key: 'periode', label: 'Periode PKL', value: '01 Januari 2026 - 28 Februari 2026' },
@@ -69,6 +44,19 @@ export default function Template({ template }) {
     const previewRef = useRef(null);
 
     const activeTemplate = useMemo(() => previewUrl || (template ? `/storage/${template.file_path}` : ''), [previewUrl, template]);
+
+    // Sinkronisasi data dari props template ke form agar posisi tersimpan tidak hilang saat menu dibuka
+    useEffect(() => {
+        if (template) {
+            Object.keys(defaultPositions).forEach((key) => {
+                if (template[key] !== undefined && template[key] !== null) {
+                    form.setData(key, template[key]);
+                }
+            });
+            setPreviewUrl(`/storage/${template.file_path}`);
+            setUsePreviousSettings(true);
+        }
+    }, [template]);
 
     useEffect(() => {
         return () => {
@@ -118,7 +106,6 @@ export default function Template({ template }) {
         }
     };
 
-    // Sinkronisasi color picker (swatch) <-> input teks kode hex untuk 1 field
     const handleColorPicker = (fieldKey, value) => {
         form.setData(`${fieldKey}_color`, value);
         setHexErrors((prev) => ({ ...prev, [fieldKey]: false }));
