@@ -67,6 +67,30 @@
         alt="Template Sertifikat"
     >
 
+    {{-- NOMOR SERTIFIKAT --}}
+    <div
+        class="field"
+        style="
+            left: {{ $template->nomor_x }}%;
+            top: {{ $template->nomor_y }}%;
+            max-width: {{ $template->nomor_lebar_max }}%;
+            font-size: {{ $fontSizes['nomor'] }}px;
+            color: {{ $colors['nomor'] }};
+            text-align: {{ $template->nomor_alignment }};
+            transform: translate(
+                {{ $template->nomor_alignment === 'center'
+                    ? '-50%'
+                    : ($template->nomor_alignment === 'right'
+                        ? '-100%'
+                        : '0')
+                }},
+                -50%
+            );
+        "
+    >
+        {{ $nomorText }}
+    </div>
+
     {{-- NAMA PESERTA --}}
     <div
         class="field"

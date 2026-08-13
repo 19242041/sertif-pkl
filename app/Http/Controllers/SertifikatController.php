@@ -17,10 +17,6 @@ use Inertia\Response;
 
 class SertifikatController extends Controller
 {
-    private const MIN_FONT_SIZE = 10;
-
-    private const MAX_FONT_SIZE = 40;
-
     /**
      * Halaman "Terbitkan Sertifikat" beserta riwayat sertifikat.
      */
@@ -85,6 +81,10 @@ class SertifikatController extends Controller
         $tanggalSelesai = $request->date('tanggal_selesai_pkl') ?? $peserta->tanggal_selesai;
         $tanggalTandaTangan = $request->date('tanggal_tanda_tangan');
 
+        $teksNomor = $request
+            ->string('nomor_sertifikat')
+            ->toString();
+
         $teksNama = $peserta->nama;
         $teksAsal = $peserta->asal_institusi;
 
@@ -97,27 +97,18 @@ class SertifikatController extends Controller
         $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
 
         /*
-         * Hitung ukuran font berdasarkan template.
-         * "asal" (Asal Sekolah) ikut dihitung independen sama seperti field lain.
+         * Ukuran font memakai nilai yang sudah diatur admin di halaman
+         * "Kelola Sertifikat" (ukuran, posisi, warna, alignment sesuai
+         * template). Tidak ada penyusutan otomatis maupun batas font
+         * minimum — teks mengikuti pengaturan template apa adanya.
          */
-        $fit = $this->autoFit([
-            'nama' => [
-                $teksNama,
-                (float) $template->nama_lebar_max
-            ],
-            'asal' => [
-                $teksAsal,
-                (float) $template->asal_lebar_max
-            ],
-            'periode' => [
-                $teksPeriode,
-                (float) $template->periode_lebar_max
-            ],
-            'tanggal' => [
-                $teksTanggal,
-                (float) $template->tanggal_lebar_max
-            ],
-        ]);
+        $fontSizes = [
+            'nomor' => (int) round((float) $template->nomor_font_size),
+            'nama' => (int) round((float) $template->nama_font_size),
+            'asal' => (int) round((float) $template->asal_font_size),
+            'periode' => (int) round((float) $template->periode_font_size),
+            'tanggal' => (int) round((float) $template->tanggal_font_size),
+        ];
 
         /*
          * AMBIL FILE TEMPLATE ASLI
@@ -132,7 +123,7 @@ class SertifikatController extends Controller
             return redirect()
                 ->back()
                 ->withErrors([
-                    'template' => 'File template tidak ditemukan: ' . $template->file_path
+                    'template' => 'File template tidak ditemukan: '.$template->file_path,
                 ]);
         }
 
@@ -140,7 +131,7 @@ class SertifikatController extends Controller
          * Gunakan file:// supaya DomPDF membaca gambar langsung
          * dari storage.
          */
-        $templateImage = 'file://' . str_replace(
+        $templateImage = 'file://'.str_replace(
             '\\',
             '/',
             $templateImagePath
@@ -152,13 +143,15 @@ class SertifikatController extends Controller
          */
         $pdf = Pdf::loadView('sertifikat.pdf', [
             'templateImage' => $templateImage,
+            'nomorText' => $teksNomor,
             'namaPeserta' => $teksNama,
             'asalText' => $teksAsal,
             'periodeText' => $teksPeriode,
             'tanggalText' => $teksTanggal,
             'template' => $template,
-            'fontSizes' => $fit['sizes'],
+            'fontSizes' => $fontSizes,
             'colors' => [
+                'nomor' => $template->nomor_color,
                 'nama' => $template->nama_color,
                 'asal' => $template->asal_color,
                 'periode' => $template->periode_color,
@@ -184,10 +177,10 @@ class SertifikatController extends Controller
         ]);
 
         $filePath = 'sertifikat/'
-            . now()->format('Y/m')
-            . '/'
-            . str()->uuid()
-            . '.pdf';
+            .now()->format('Y/m')
+            .'/'
+            .str()->uuid()
+            .'.pdf';
 
         Storage::disk('public')->put(
             $filePath,
@@ -206,14 +199,6 @@ class SertifikatController extends Controller
 
         $status = 'Sertifikat berhasil digenerate.';
 
-        if ($fit['warnings']) {
-            $status .= ' Catatan: area '
-                . implode(', ', $fit['warnings'])
-                . ' terlalu sempit sehingga memakai ukuran font minimum ('
-                . self::MIN_FONT_SIZE
-                . 'px).';
-        }
-
         return redirect()
             ->route('sertifikat.index')
             ->with('status', $status);
@@ -223,59 +208,69 @@ class SertifikatController extends Controller
     {
         $validated = $request->validated();
 
-        $template = TemplateSertifikat::query()
-            ->where('is_active', true)
-            ->latest()
-            ->first();
+        return DB::transaction(function () use ($request, $validated) {
+            $template = TemplateSertifikat::query()
+                ->where('is_active', true)
+                ->latest()
+                ->first();
 
-        /*
-         * Kalau upload gambar baru, simpan gambar ke storage/public.
-         */
-        if ($request->hasFile('template')) {
-            // Hapus gambar template lama kalau ada
-            if ($template && $template->file_path) {
-                Storage::disk('public')->delete($template->file_path);
+            /*
+             * Kalau upload gambar baru, simpan gambar ke storage/public.
+             */
+            if ($request->hasFile('template')) {
+                // Hapus gambar template lama kalau ada
+                if ($template && $template->file_path) {
+                    Storage::disk('public')->delete($template->file_path);
+                }
+
+                $filePath = $request->file('template')->store(
+                    'sertifikat/template',
+                    'public'
+                );
+            } elseif ($template) {
+                // Kalau tidak upload baru, tetap gunakan template lama
+                $filePath = $template->file_path;
+            } else {
+                return back()
+                    ->withErrors([
+                        'template' => 'Silakan upload gambar template sertifikat terlebih dahulu.',
+                    ])
+                    ->withInput();
             }
 
-            $filePath = $request->file('template')->store(
-                'sertifikat/template',
-                'public'
-            );
-        } elseif ($template) {
-            // Kalau tidak upload baru, tetap gunakan template lama
-            $filePath = $template->file_path;
-        } else {
-            return back()
-                ->withErrors([
-                    'template' => 'Silakan upload gambar template sertifikat terlebih dahulu.'
-                ])
-                ->withInput();
-        }
+            unset($validated['template']);
 
-        unset($validated['template']);
+            $validated['file_path'] = $filePath;
+            $validated['is_active'] = true;
 
-        $validated['file_path'] = $filePath;
-        $validated['is_active'] = true;
+            /*
+             * Nonaktifkan template lama.
+             */
+            TemplateSertifikat::query()->update([
+                'is_active' => false,
+            ]);
 
-        /*
-         * Nonaktifkan template lama.
-         */
-        TemplateSertifikat::query()->update([
-            'is_active' => false,
-        ]);
+            /*
+             * Simpan template baru / update template aktif.
+             *
+             * PERHATIAN: setelah kueri "nonaktifkan semua template" di atas,
+             * model $template masih menyimpan nilai lama is_active=true di
+             * memori. Tanpa refresh(), Eloquent menganggap is_active tidak
+             * berubah (tidak dirty) sehingga kolomnya TIDAK ditulis — akibatnya
+             * tidak ada template aktif tersisa. refresh() menyinkronkan nilai
+             * dari database agar is_active=true benar-benar ditulis.
+             */
+            if ($template) {
+                $template->refresh();
+                $template->update($validated);
+            } else {
+                TemplateSertifikat::create($validated);
+            }
 
-        /*
-         * Simpan template baru / update template aktif.
-         */
-        if ($template) {
-            $template->update($validated);
-        } else {
-            TemplateSertifikat::create($validated);
-        }
-
-        return redirect()
-            ->route('sertifikat.template')
-            ->with('status', 'Template sertifikat berhasil disimpan.');
+            return redirect()
+                ->route('sertifikat.template')
+                ->with('status', 'Template sertifikat berhasil disimpan.');
+        });
     }
 
     public function download(Sertifikat $sertifikat)
@@ -291,93 +286,46 @@ class SertifikatController extends Controller
         return redirect()->route('sertifikat.index')->with('status', 'Sertifikat berhasil dihapus.');
     }
 
-    /**
-     * Hitung ukuran font paling besar yang muat untuk tiap teks di dalam
-     * lebar area maksimal (persen dari lebar halaman). Setiap field dihitung
-     * independen sesuai isi teks dan lebar area miliknya.
-     *
-     * @param array<string, array{0: string, 1: float}> $fields text & lebar_max (persen)
-     *
-     * @return array{sizes: array<string, int>, warnings: array<int, string>}
-     */
-    private function autoFit(array $fields): array
-    {
-        $preheat = Pdf::loadHTML(
-            '<!DOCTYPE html>
-            <html>
-            <meta charset="UTF-8">
-            <body style="font-family: DejaVu Sans, sans-serif;">x</body>
-            </html>'
-        );
-
-        $preheat->setPaper([0, 0, 1152, 648]);
-        $dompdf = $preheat->getDompdf();
-        $dompdf->render();
-
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvasWidthPt = $dompdf->getCanvas()->get_width();
-
-        /** @var string|null $font */
-        $font = $fontMetrics->getFont('DejaVu Sans');
-
-        $sizes = [];
-        $warnings = [];
-
-        foreach ($fields as $key => [$text, $maxWidthPercent]) {
-            $maxWidthPt = ($canvasWidthPt * $maxWidthPercent) / 100;
-            $size = self::MAX_FONT_SIZE;
-            $hitMinimum = false;
-
-            while ($size > self::MIN_FONT_SIZE) {
-                $widthPt = $fontMetrics->getTextWidth($text, $font, $size * 0.75);
-
-                if ($widthPt <= $maxWidthPt) {
-                    break;
-                }
-
-                $size--;
-            }
-
-            if ($size <= self::MIN_FONT_SIZE && $fontMetrics->getTextWidth($text, $font, self::MIN_FONT_SIZE * 0.75) > $maxWidthPt) {
-                $size = self::MIN_FONT_SIZE;
-                $hitMinimum = true;
-            }
-
-            $sizes[$key] = $size;
-
-            if ($hitMinimum) {
-                $warnings[] = $key;
-            }
-        }
-
-        return ['sizes' => $sizes, 'warnings' => $warnings];
-    }
-
     private function templateProps(TemplateSertifikat $template): array
     {
         return [
             'id' => $template->id,
             'file_path' => $template->file_path,
+            'nomor_x' => $template->nomor_x,
+            'nomor_y' => $template->nomor_y,
+            'nomor_alignment' => $template->nomor_alignment,
+            'nomor_lebar_max' => $template->nomor_lebar_max,
+            'nomor_color' => $template->nomor_color,
+            'nomor_font_family' => $template->nomor_font_family,
+            'nomor_font_size' => $template->nomor_font_size,
             'nama_x' => $template->nama_x,
             'nama_y' => $template->nama_y,
             'nama_alignment' => $template->nama_alignment,
             'nama_lebar_max' => $template->nama_lebar_max,
             'nama_color' => $template->nama_color,
+            'nama_font_family' => $template->nama_font_family,
+            'nama_font_size' => $template->nama_font_size,
             'asal_x' => $template->asal_x,
             'asal_y' => $template->asal_y,
             'asal_alignment' => $template->asal_alignment,
             'asal_lebar_max' => $template->asal_lebar_max,
             'asal_color' => $template->asal_color,
+            'asal_font_family' => $template->asal_font_family,
+            'asal_font_size' => $template->asal_font_size,
             'periode_x' => $template->periode_x,
             'periode_y' => $template->periode_y,
             'periode_alignment' => $template->periode_alignment,
             'periode_lebar_max' => $template->periode_lebar_max,
             'periode_color' => $template->periode_color,
+            'periode_font_family' => $template->periode_font_family,
+            'periode_font_size' => $template->periode_font_size,
             'tanggal_x' => $template->tanggal_x,
             'tanggal_y' => $template->tanggal_y,
             'tanggal_alignment' => $template->tanggal_alignment,
             'tanggal_lebar_max' => $template->tanggal_lebar_max,
             'tanggal_color' => $template->tanggal_color,
+            'tanggal_font_family' => $template->tanggal_font_family,
+            'tanggal_font_size' => $template->tanggal_font_size,
         ];
     }
 }

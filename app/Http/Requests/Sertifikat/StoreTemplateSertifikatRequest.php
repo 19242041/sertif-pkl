@@ -23,6 +23,23 @@ class StoreTemplateSertifikatRequest extends FormRequest
             ],
 
             // =========================
+            // NOMOR SERTIFIKAT
+            // =========================
+            'nomor_x' => ['required', 'numeric', 'between:0,100'],
+            'nomor_y' => ['required', 'numeric', 'between:0,100'],
+            'nomor_font_size' => ['required', 'numeric', 'between:0.1,120'],
+            'nomor_font_family' => [
+                'required',
+                'in:Luxurious Script,Times New Roman,DejaVu Sans,Arial',
+            ],
+            'nomor_alignment' => ['required', 'in:left,center,right'],
+            'nomor_lebar_max' => ['required', 'numeric', 'between:1,100'],
+            'nomor_color' => [
+                'required',
+                'regex:/^#[0-9A-Fa-f]{6}$/',
+            ],
+
+            // =========================
             // NAMA PESERTA
             // =========================
             'nama_x' => ['required', 'numeric', 'between:0,100'],
@@ -99,29 +116,25 @@ class StoreTemplateSertifikatRequest extends FormRequest
             'template.mimes' => 'Template harus berformat JPG, JPEG, atau PNG.',
             'template.max' => 'Ukuran template maksimal 5 MB.',
 
-            'nama_color.regex' =>
-                'Kode warna Nama Peserta harus format #RRGGBB.',
+            'nomor_color.regex' => 'Kode warna Nomor Sertifikat harus format #RRGGBB.',
 
-            'asal_color.regex' =>
-                'Kode warna Asal Sekolah harus format #RRGGBB.',
+            'nama_color.regex' => 'Kode warna Nama Peserta harus format #RRGGBB.',
 
-            'periode_color.regex' =>
-                'Kode warna Periode PKL harus format #RRGGBB.',
+            'asal_color.regex' => 'Kode warna Asal Sekolah harus format #RRGGBB.',
 
-            'tanggal_color.regex' =>
-                'Kode warna Tanggal Tanda Tangan harus format #RRGGBB.',
+            'periode_color.regex' => 'Kode warna Periode PKL harus format #RRGGBB.',
 
-            'nama_font_family.in' =>
-                'Font Nama Peserta tidak valid.',
+            'tanggal_color.regex' => 'Kode warna Tanggal Tanda Tangan harus format #RRGGBB.',
 
-            'asal_font_family.in' =>
-                'Font Asal Sekolah tidak valid.',
+            'nomor_font_family.in' => 'Font Nomor Sertifikat tidak valid.',
 
-            'periode_font_family.in' =>
-                'Font Periode PKL tidak valid.',
+            'nama_font_family.in' => 'Font Nama Peserta tidak valid.',
 
-            'tanggal_font_family.in' =>
-                'Font Tanggal Tanda Tangan tidak valid.',
+            'asal_font_family.in' => 'Font Asal Sekolah tidak valid.',
+
+            'periode_font_family.in' => 'Font Periode PKL tidak valid.',
+
+            'tanggal_font_family.in' => 'Font Tanggal Tanda Tangan tidak valid.',
         ];
     }
 }

@@ -1,37 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, Download, FileText, FileUp } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-
-const MIN_FONT = 10;
-const MAX_FONT = 40;
-
-function measureText(text, fontSizePx) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.font = `${fontSizePx}px "DejaVu Sans", Roboto, "Helvetica Neue", Arial, sans-serif`;
-    return ctx.measureText(text).width;
-}
-
-function fitFontSize(text, maxWidthPx) {
-    if (!text || maxWidthPx <= 0) {
-        return { size: MIN_FONT, atMin: false };
-    }
-
-    for (let size = MAX_FONT; size > MIN_FONT; size -= 1) {
-        if (measureText(text, size) <= maxWidthPx) {
-            return { size, atMin: false };
-        }
-    }
-
-    return { size: MIN_FONT, atMin: true };
-}
+import { Download, FileText, FileUp } from 'lucide-react';
 
 const alignmentTransform = (align) => (
     align === 'center' ? 'translate(-50%, -50%)'
         : align === 'right' ? 'translate(-100%, -50%)'
             : 'translate(0, -50%)'
 );
+
+function formatDateDMY(dateStr) {
+    if (!dateStr) return '';
+
+    const date = new Date(`${dateStr}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return '';
+
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    });
+}
 
 export default function Generate({ pesertaOptions, sertifikats, template }) {
     const form = useForm({
@@ -41,20 +29,6 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
         tanggal_selesai_pkl: '',
         tanggal_tanda_tangan: '',
     });
-    const previewRef = useRef(null);
-    const [previewWidth, setPreviewWidth] = useState(0);
-
-    useEffect(() => {
-        const el = previewRef.current;
-        if (!el) return;
-
-        const update = () => setPreviewWidth(el.clientWidth);
-
-        update();
-        window.addEventListener('resize', update);
-
-        return () => window.removeEventListener('resize', update);
-    }, [template?.file_path]);
 
     const submit = (event) => {
         event.preventDefault();
@@ -67,21 +41,84 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
     const selectedPeserta = pesertaOptions.find((item) => String(item.id) === String(form.data.peserta_pkl_id));
 
-    useEffect(() => {
-        if (!selectedPeserta) return;
+    const handlePesertaChange = (value) => {
+        form.setData((previous) => {
+            const peserta = pesertaOptions.find((item) => String(item.id) === String(value));
 
-        if (!form.data.tanggal_mulai_pkl) {
-            form.setData('tanggal_mulai_pkl', selectedPeserta.tanggal_mulai ?? '');
-        }
+            return {
+                ...previous,
+                peserta_pkl_id: value,
+                tanggal_mulai_pkl: peserta?.tanggal_mulai ?? '',
+                tanggal_selesai_pkl: peserta?.tanggal_selesai ?? '',
+            };
+        });
+    };
 
-        if (!form.data.tanggal_selesai_pkl) {
-            form.setData('tanggal_selesai_pkl', selectedPeserta.tanggal_selesai ?? '');
-        }
-    }, [selectedPeserta]);
+    const periodeText = [
+        formatDateDMY(form.data.tanggal_mulai_pkl),
+        formatDateDMY(form.data.tanggal_selesai_pkl),
+    ].filter(Boolean).join(' - ');
+
+    const previewFields = template ? [
+        {
+            key: 'nomor',
+            value: form.data.nomor_sertifikat,
+            x: template.nomor_x, y: template.nomor_y,
+            lebar: template.nomor_lebar_max,
+            align: template.nomor_alignment,
+            color: template.nomor_color,
+            fontFamily: template.nomor_font_family,
+            fontSize: template.nomor_font_size,
+        },
+        {
+            key: 'nama',
+            value: selectedPeserta?.nama ?? '',
+            x: template.nama_x, y: template.nama_y,
+            lebar: template.nama_lebar_max,
+            align: template.nama_alignment,
+            color: template.nama_color,
+            fontFamily: template.nama_font_family,
+            fontSize: template.nama_font_size,
+        },
+        {
+            key: 'asal',
+            value: selectedPeserta?.asal_institusi ?? '',
+            x: template.asal_x, y: template.asal_y,
+            lebar: template.asal_lebar_max,
+            align: template.asal_alignment,
+            color: template.asal_color,
+            fontFamily: template.asal_font_family,
+            fontSize: template.asal_font_size,
+        },
+        {
+            key: 'periode',
+            value: periodeText,
+            x: template.periode_x, y: template.periode_y,
+            lebar: template.periode_lebar_max,
+            align: template.periode_alignment,
+            color: template.periode_color,
+            fontFamily: template.periode_font_family,
+            fontSize: template.periode_font_size,
+        },
+        {
+            key: 'tanggal',
+            value: formatDateDMY(form.data.tanggal_tanda_tangan),
+            x: template.tanggal_x, y: template.tanggal_y,
+            lebar: template.tanggal_lebar_max,
+            align: template.tanggal_alignment,
+            color: template.tanggal_color,
+            fontFamily: template.tanggal_font_family,
+            fontSize: template.tanggal_font_size,
+        },
+    ].filter((field) => field.value) : [];
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Terbitkan Sertifikat' }]}>
-            <Head title="Terbitkan Sertifikat" />
+            <Head title="Terbitkan Sertifikat">
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+                <link href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap" rel="stylesheet" />
+            </Head>
 
             <div className="space-y-6">
                 <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
@@ -105,7 +142,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                         <div className="mt-6 grid gap-4 md:grid-cols-2">
                             <label className="block md:col-span-2">
                                 <span className="mb-2 block text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#1B2733]">Peserta</span>
-                                <select value={form.data.peserta_pkl_id} onChange={(e) => form.setData('peserta_pkl_id', e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12">
+                                <select value={form.data.peserta_pkl_id} onChange={(e) => handlePesertaChange(e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12">
                                     <option value="">Pilih peserta</option>
                                     {pesertaOptions.map((item) => (
                                         <option key={item.id} value={item.id}>{item.nama} - {item.asal_institusi}</option>
@@ -147,7 +184,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                             <div className="mt-3 text-[13px] text-[#657085]">
                                 <div>Peserta: <span className="font-semibold text-[#1B2733]">{selectedPeserta?.nama ?? '-'}</span></div>
                                 <div>Asal: <span className="font-semibold text-[#1B2733]">{selectedPeserta?.asal_institusi ?? '-'}</span></div>
-                                <div>Periode: <span className="font-semibold text-[#1B2733]">{form.data.tanggal_mulai_pkl || '-'} - {form.data.tanggal_selesai_pkl || '-'}</span></div>
+                                <div>Periode: <span className="font-semibold text-[#1B2733]">{periodeText || '-'}</span></div>
                                 <div>Template aktif: <span className="font-semibold text-[#1B2733]">{template ? 'Ada' : 'Belum ada'}</span></div>
                             </div>
                         </div>
@@ -158,7 +195,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A0B3]">Template Aktif</p>
-                                    <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Pratinjau template</h2>
+                                    <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Pratinjau live</h2>
                                 </div>
                                 <Link href={route('sertifikat.template')} className="rounded-[10px] border border-[#E4E9F0] px-3.5 py-2 text-[13px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]">
                                     Kelola
@@ -167,48 +204,33 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
                             <div className="mt-4 rounded-[24px] border border-[#E4E9F0] bg-[#F7F9FC] p-4">
                                 {template ? (
-                                    <div ref={previewRef} className="relative overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
-                                        <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="block w-full object-cover" />
-                                        {[
-                                            { key: 'nama', label: 'Nama Peserta', x: template.nama_x, y: template.nama_y, lebar: template.nama_lebar_max, align: template.nama_alignment, value: 'Nama Peserta Contoh' },
-                                            { key: 'periode', label: 'Periode PKL', x: template.periode_x, y: template.periode_y, lebar: template.periode_lebar_max, align: template.periode_alignment, value: '01 Januari 2026 - 28 Februari 2026' },
-                                            { key: 'tanggal', label: 'Tanggal Tanda Tangan', x: template.tanggal_x, y: template.tanggal_y, lebar: template.tanggal_lebar_max, align: template.tanggal_alignment, value: 'Karawang, 28 Februari 2026' },
-                                        ].map((item) => {
-                                            const maxWidthPx = (previewWidth * item.lebar) / 100;
-                                            const { size, atMin } = fitFontSize(item.value, maxWidthPx);
+                                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
+                                        <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="absolute inset-0 h-full w-full object-cover" />
 
-                                            return (
-                                                <div
-                                                    key={item.key}
-                                                    className="pointer-events-none absolute text-[#1B2733]"
-                                                    style={{
-                                                        left: `${item.x}%`,
-                                                        top: `${item.y}%`,
-                                                        transform: alignmentTransform(item.align),
-                                                        maxWidth: `${item.lebar}%`,
-                                                        width: 'auto',
-                                                        textAlign: item.align,
-                                                        fontSize: `${size}px`,
-                                                        lineHeight: 1.15,
-                                                        boxSizing: 'border-box',
-                                                        overflowWrap: 'break-word',
-                                                        wordBreak: 'break-word',
-                                                        whiteSpace: 'normal',
-                                                    }}
-                                                >
-                                                    <div className="rounded-full bg-white/85 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#657085] shadow-sm">
-                                                        {item.label}
-                                                    </div>
-                                                    {atMin && (
-                                                        <span className="inline-flex items-center gap-1 rounded-full bg-[#C0433D] px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                                                            <AlertTriangle className="h-3 w-3" />
-                                                            Area sempit, font minimum {MIN_FONT}px
-                                                        </span>
-                                                    )}
-                                                    <div className="mt-1 font-semibold text-[#0E2A47]">{item.value}</div>
-                                                </div>
-                                            );
-                                        })}
+                                        {previewFields.map((item) => (
+                                            <div
+                                                key={item.key}
+                                                className="pointer-events-none absolute"
+                                                style={{
+                                                    left: `${item.x}%`,
+                                                    top: `${item.y}%`,
+                                                    transform: alignmentTransform(item.align),
+                                                    maxWidth: `${item.lebar}%`,
+                                                    width: 'auto',
+                                                    textAlign: item.align,
+                                                    fontSize: `${item.fontSize}px`,
+                                                    lineHeight: 1.15,
+                                                    color: item.color,
+                                                    fontFamily: `"${item.fontFamily}", "DejaVu Sans", sans-serif`,
+                                                    boxSizing: 'border-box',
+                                                    overflowWrap: 'break-word',
+                                                    wordBreak: 'break-word',
+                                                    whiteSpace: 'normal',
+                                                }}
+                                            >
+                                                <div>{item.value}</div>
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : (
                                     <div className="flex min-h-[240px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[#C9D3E0] bg-white text-center">

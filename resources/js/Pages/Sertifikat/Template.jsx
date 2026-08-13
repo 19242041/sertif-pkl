@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -104,6 +104,24 @@ export default function Template({ template }) {
         if (!usePreviousSettings) {
             Object.entries(defaultPositions).forEach(([key, value]) => form.setData(key, value));
         }
+
+        if (form.processing) return;
+
+        /*
+         * Simpan file template langsung ke server begitu file dipilih,
+         * supaya template langsung tersimpan (tidak menunggu tombol
+         * "Simpan Template" dan tidak hilang walau halaman direfresh).
+         * Posisi yang dipakai mengikuti preferensi "Pakai posisi lama
+         * saat ganti template".
+         */
+        const payload = usePreviousSettings
+            ? { ...form.data, template: file }
+            : { ...form.data, ...defaultPositions, template: file };
+
+        router.post(route('sertifikat.template.store'), payload, {
+            forceFormData: true,
+            preserveScroll: true,
+        });
     };
 
     const handleColorPicker = (fieldKey, value) => {

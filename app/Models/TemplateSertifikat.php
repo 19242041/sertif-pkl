@@ -14,6 +14,15 @@ class TemplateSertifikat extends Model
     protected $fillable = [
         'file_path',
 
+        // Nomor Sertifikat
+        'nomor_x',
+        'nomor_y',
+        'nomor_font_size',
+        'nomor_font_family',
+        'nomor_alignment',
+        'nomor_lebar_max',
+        'nomor_color',
+
         // Nama Peserta
         'nama_x',
         'nama_y',
@@ -56,6 +65,11 @@ class TemplateSertifikat extends Model
     protected function casts(): array
     {
         return [
+            'nomor_x' => 'float',
+            'nomor_y' => 'float',
+            'nomor_font_size' => 'float',
+            'nomor_lebar_max' => 'float',
+
             'nama_x' => 'float',
             'nama_y' => 'float',
             'nama_font_size' => 'float',
