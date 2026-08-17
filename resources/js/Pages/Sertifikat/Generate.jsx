@@ -1,12 +1,24 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Download, FileText, FileUp } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
-const alignmentTransform = (align) => (
-    align === 'center' ? 'translate(-50%, -50%)'
-        : align === 'right' ? 'translate(-100%, -50%)'
-            : 'translate(0, -50%)'
+const fieldLeft = (x, lebarMax, alignment) => (
+    alignment === 'center' ? x - lebarMax / 2
+        : alignment === 'right' ? x - lebarMax
+            : x
 );
+
+/*
+ * Lebar halaman PDF (pt) — harus sama dengan backend ($pageWidth di
+ * SertifikatController). Font template disimpan dalam px (96 DPI); supaya
+ * ukuran teks relatif terhadap gambar PERSIS sama antara preview dan PDF,
+ * font diskalakan terhadap lebar container.
+ */
+const PDF_PAGE_WIDTH_PT = 1152;
+const REFERENCE_WIDTH_PX = PDF_PAGE_WIDTH_PT * (96 / 72); // 1536
+
+const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
 function formatDateDMY(dateStr) {
     if (!dateStr) return '';
@@ -14,11 +26,11 @@ function formatDateDMY(dateStr) {
     const date = new Date(`${dateStr}T00:00:00`);
     if (Number.isNaN(date.getTime())) return '';
 
-    return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = BULAN[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${day} ${month} ${year}`;
 }
 
 export default function Generate({ pesertaOptions, sertifikats, template }) {
@@ -29,6 +41,23 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
         tanggal_selesai_pkl: '',
         tanggal_tanda_tangan: '',
     });
+
+    const previewRef = useRef(null);
+    const [fontScale, setFontScale] = useState(1);
+
+    // Skalakan font preview mengikuti lebar container agar ukurannya relatif sama dengan PDF
+    useEffect(() => {
+        const el = previewRef.current;
+        if (!el) return undefined;
+
+        const update = () => setFontScale(el.clientWidth / REFERENCE_WIDTH_PX);
+        update();
+
+        const observer = new ResizeObserver(update);
+        observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [template]);
 
     const submit = (event) => {
         event.preventDefault();
@@ -114,11 +143,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Terbitkan Sertifikat' }]}>
-            <Head title="Terbitkan Sertifikat">
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-                <link href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap" rel="stylesheet" />
-            </Head>
+            <Head title="Terbitkan Sertifikat" />
 
             <div className="space-y-6">
                 <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
@@ -127,7 +152,7 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                     <p className="mt-2 text-[14px] text-[#657085]">Pilih peserta, isi nomor dan tanggal, lalu sistem akan menghasilkan PDF otomatis dari template yang aktif.</p>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[1fr_0.72fr]">
+                <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                     <form onSubmit={submit} className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
                         <div className="flex items-center justify-between gap-4">
                             <div>
@@ -204,21 +229,20 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
                             <div className="mt-4 rounded-[24px] border border-[#E4E9F0] bg-[#F7F9FC] p-4">
                                 {template ? (
-                                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
-                                        <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="absolute inset-0 h-full w-full object-cover" />
+                                    <div ref={previewRef} className="relative w-full overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
+                                        <img src={`/storage/${template.file_path}`} alt="Template sertifikat" className="block w-full select-none" />
 
                                         {previewFields.map((item) => (
                                             <div
                                                 key={item.key}
                                                 className="pointer-events-none absolute"
                                                 style={{
-                                                    left: `${item.x}%`,
+                                                    left: `${fieldLeft(item.x, item.lebar, item.align)}%`,
                                                     top: `${item.y}%`,
-                                                    transform: alignmentTransform(item.align),
-                                                    maxWidth: `${item.lebar}%`,
-                                                    width: 'auto',
+                                                    width: `${item.lebar}%`,
+                                                    marginTop: '-0.55em',
                                                     textAlign: item.align,
-                                                    fontSize: `${item.fontSize}px`,
+                                                    fontSize: `${item.fontSize * fontScale}px`,
                                                     lineHeight: 1.15,
                                                     color: item.color,
                                                     fontFamily: `"${item.fontFamily}", "DejaVu Sans", sans-serif`,

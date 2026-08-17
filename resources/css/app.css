@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Font sertifikat self-hosted — file TTF yang sama dipakai DomPDF di backend
+ * (lihat config/certificate_fonts.php) juga disajikan ke browser di sini,
+ * supaya preview di Editor Visual / Terbitkan Sertifikat memakai font yang
+ * PERSIS sama dengan hasil PDF.
+ *
+ * - "Luxurious Script"  -> LuxuriousScript-Regular.ttf
+ * - "Times New Roman"   -> Tinos (metrik identik dengan Times New Roman)
+ * - "DejaVu Sans"       -> DejaVuSans (font bawaan DomPDF)
+ */
+@font-face {
+    font-family: 'Luxurious Script';
+    src: url('/fonts/LuxuriousScript-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Times New Roman';
+    src: url('/fonts/Tinos-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Times New Roman';
+    src: url('/fonts/Tinos-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'DejaVu Sans';
+    src: url('/fonts/DejaVuSans.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'DejaVu Sans';
+    src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}

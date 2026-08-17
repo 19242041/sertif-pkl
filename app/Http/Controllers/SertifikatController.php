@@ -8,8 +8,10 @@ use App\Models\PesertaPkl;
 use App\Models\Sertifikat;
 use App\Models\TemplateSertifikat;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Dompdf\FontMetrics;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -90,11 +92,11 @@ class SertifikatController extends Controller
 
         $teksPeriode = sprintf(
             '%s - %s',
-            optional($tanggalMulai)->format('d M Y'),
-            optional($tanggalSelesai)->format('d M Y')
+            $this->formatTanggalIndonesia($tanggalMulai),
+            $this->formatTanggalIndonesia($tanggalSelesai)
         );
 
-        $teksTanggal = optional($tanggalTandaTangan)->format('d M Y') ?? '';
+        $teksTanggal = $this->formatTanggalIndonesia($tanggalTandaTangan);
 
         /*
          * Ukuran font memakai nilai yang sudah diatur admin di halaman
@@ -175,11 +177,22 @@ class SertifikatController extends Controller
             'fields' => $fields,
         ]);
 
+        $this->registerCertificateFonts($template, $pdf);
+
         /*
-         * Ukuran 16:9.
-         * 1152 x 648 point = rasio 16:9.
+         * Ukuran halaman PDF mengikuti rasio gambar template asli, supaya
+         * persentase X/Y (yang disimpan relatif terhadap template) terpetakan
+         * sama persis antara preview browser dan PDF. Lebar dipatok 1152pt,
+         * tinggi dihitung dari rasio gambar. Kalau ukuran gambar tidak
+         * terbaca, fallback ke rasio 16:9 (1152 x 648).
          */
-        $pdf->setPaper([0, 0, 1152, 648]);
+        $imageSize = @getimagesize($templateImagePath);
+        $pageWidth = 1152.0;
+        $pageHeight = ($imageSize && $imageSize[0] > 0 && $imageSize[1] > 0)
+            ? round($pageWidth * $imageSize[1] / $imageSize[0], 2)
+            : 648.0;
+
+        $pdf->setPaper([0, 0, $pageWidth, $pageHeight]);
 
         /*
          * Pastikan DomPDF boleh membaca file lokal.
@@ -303,9 +316,67 @@ class SertifikatController extends Controller
     }
 
     /*
-     * Hitung koordinat (pt) tiap field dari anchor X/Y (persen) di template.
-     * Mengukur lebar teks dengan FontMetrics DomPDF karena transform CSS tidak
-     * didukung — center/right dan perataan vertikal dihitung manual.
+     * Daftarkan font kustom (lihat config/certificate_fonts.php) ke DomPDF
+     * yang dipakai untuk me-render PDF, supaya metrik lebar hurufnya identik
+     * dengan yang dipakai browser di Editor Visual.
+     */
+    private function registerCertificateFonts(TemplateSertifikat $template, $pdf): void
+    {
+        $this->registerTemplateFonts($template, $pdf->getDomPDF()->getFontMetrics());
+    }
+
+    /*
+     * Registrasi font kustom pada instance FontMetrics tertentu. Font yang
+     * tidak ada di config dilewati (biarkan penanganan bawaan DomPDF).
+     */
+    private function registerTemplateFonts(TemplateSertifikat $template, FontMetrics $fontMetrics): void
+    {
+        $fontConfig = config('certificate_fonts', []);
+
+        if (empty($fontConfig)) {
+            return;
+        }
+
+        $families = array_unique(array_filter([
+            $template->nama_font_family,
+            $template->asal_font_family,
+            $template->nomor_font_family,
+            $template->periode_font_family,
+            $template->tanggal_font_family,
+        ]));
+
+        foreach ($families as $family) {
+            if (! isset($fontConfig[$family])) {
+                continue;
+            }
+
+            $files = $fontConfig[$family];
+
+            if (! empty($files['regular']) && is_file($files['regular'])) {
+                $fontMetrics->registerFont([
+                    'family' => $family,
+                    'weight' => 'normal',
+                    'style' => 'normal',
+                ], $files['regular']);
+            }
+
+            if (! empty($files['bold']) && is_file($files['bold'])) {
+                $fontMetrics->registerFont([
+                    'family' => $family,
+                    'weight' => 'bold',
+                    'style' => 'normal',
+                ], $files['bold']);
+            }
+        }
+    }
+
+    /*
+     * Hitung posisi tiap field dari nilai template. Mekanisme barunya memakai
+     * kombinasi left + width + text-align (bukan CSS transform) supaya posisi
+     * PDF konsisten dengan preview browser:
+     *   - left:    left = x%        | center = (x - lebar_max/2)% | right = (x - lebar_max)%
+     *   - width:   lebar_max%
+     *   - top:     y%  +  margin-top: -0.55em (geser vertikal berbasis em)
      */
     private function computeFieldPositions(
         array $texts,
@@ -313,24 +384,6 @@ class SertifikatController extends Controller
         array $colors,
         TemplateSertifikat $template
     ): array {
-        $pageWidth = 1152;
-        $pageHeight = 648;
-
-        $preheat = Pdf::loadHTML(
-            '<!DOCTYPE html>
-            <html>
-            <meta charset="UTF-8">
-            <body style="font-family: DejaVu Sans, sans-serif;">x</body>
-            </html>'
-        );
-
-        $preheat->setPaper([0, 0, $pageWidth, $pageHeight]);
-        $preheatDompdf = $preheat->getDompdf();
-        $preheatDompdf->render();
-
-        $fontMetrics = $preheatDompdf->getFontMetrics();
-        $fonts = [];
-
         $fields = [];
 
         foreach ($texts as $key => $text) {
@@ -338,41 +391,20 @@ class SertifikatController extends Controller
             $y = (float) $template->{$key.'_y'};
             $lebarMax = (float) $template->{$key.'_lebar_max'};
             $alignment = $template->{$key.'_alignment'};
-            $fontPx = $fontSizes[$key];
-            $fontPt = $fontPx * 0.75;
 
-            $family = $this->pdfFontFamily($template->{$key.'_font_family'});
-            $fonts[$family] ??= $fontMetrics->getFont($family);
-
-            $textWidth = $fontMetrics->getTextWidth($text, $fonts[$family], $fontPt);
-            $maxWidthPt = $lebarMax / 100 * $pageWidth;
-            $boxWidth = min($textWidth, $maxWidthPt);
-            $lineCount = ($maxWidthPt > 0 && $textWidth > $maxWidthPt)
-                ? (int) ceil($textWidth / $maxWidthPt)
-                : 1;
-
-            $anchorX = $x / 100 * $pageWidth;
-            $anchorY = $y / 100 * $pageHeight;
-            $boxHeight = $lineCount * $fontPt * 1.15;
-
-            $left = $anchorX - match ($alignment) {
-                'center' => $boxWidth / 2,
-                'right' => $boxWidth,
-                default => 0,
+            $left = match ($alignment) {
+                'center' => $x - $lebarMax / 2,
+                'right' => $x - $lebarMax,
+                default => $x,
             };
-
-            $top = $anchorY - $boxHeight / 2;
-
-            $left = max(0, (float) min($left, $pageWidth - $boxWidth));
-            $top = max(0, (float) min($top, $pageHeight - $boxHeight));
 
             $fields[$key] = [
                 'text' => $text,
-                'left' => round($left, 2),
-                'top' => round($top, 2),
-                'width' => round($boxWidth, 2),
-                'font_size' => $fontPx,
-                'font_family' => $family,
+                'left' => $left,
+                'top' => $y,
+                'width' => $lebarMax,
+                'font_size' => $fontSizes[$key],
+                'font_family' => $this->pdfFontFamily($template->{$key.'_font_family'}),
                 'color' => $colors[$key],
                 'alignment' => $alignment,
             ];
@@ -382,12 +414,32 @@ class SertifikatController extends Controller
     }
 
     /*
+     * Format tanggal ke "d NamaBulan Y" (contoh: 28 Februari 2026) memakai
+     * nama bulan Indonesia penuh, konsisten dengan preview di template.
+     */
+    private function formatTanggalIndonesia(?Carbon $date): string
+    {
+        if ($date === null) {
+            return '';
+        }
+
+        $bulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+
+        return $date->format('d').' '.$bulan[$date->month].' '.$date->year;
+    }
+
+    /*
      * Petakan nama font template ke font yang benar-benar dikenal DomPDF.
      */
     private function pdfFontFamily(string $family): string
     {
         return match (strtolower(trim($family))) {
-            'times new roman' => 'Times',
+            'luxurious script' => 'Luxurious Script',
+            'times new roman' => 'Times New Roman',
             'arial' => 'Helvetica',
             'courier new' => 'Courier',
             'dejavu serif' => 'DejaVu Serif',

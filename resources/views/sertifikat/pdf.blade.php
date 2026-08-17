@@ -46,7 +46,7 @@
             line-height: 1.15;
             margin: 0;
             padding: 0;
-            white-space: pre-wrap;
+            white-space: normal;
             overflow-wrap: break-word;
             word-break: break-word;
             box-sizing: border-box;
@@ -70,11 +70,12 @@
             <div
                 class="field"
                 style="
-                    left: {{ $field['left'] }}pt;
-                    top: {{ $field['top'] }}pt;
-                    width: {{ $field['width'] }}pt;
+                    left: {{ $field['left'] }}%;
+                    top: {{ $field['top'] }}%;
+                    width: {{ $field['width'] }}%;
+                    margin-top: -0.82em;
                     font-size: {{ $field['font_size'] }}px;
-                    font-family: {{ $field['font_family'] }}, DejaVu Sans, sans-serif;
+                    font-family: '{{ $field['font_family'] }}', DejaVu Sans, sans-serif;
                     color: {{ $field['color'] }};
                     text-align: {{ $field['alignment'] }};
                 "

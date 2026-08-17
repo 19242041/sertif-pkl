@@ -21,6 +21,12 @@
 /storage/*.key
 /storage/pail
 /vendor
+
+# DomPDF font cache (runtime-generated, contains absolute paths)
+/storage/fonts/*
+!/storage/fonts/LuxuriousScript-Regular.ttf
+!/storage/fonts/Tinos-Regular.ttf
+!/storage/fonts/Tinos-Bold.ttf
 _ide_helper.php
 Homestead.json
 Homestead.yaml

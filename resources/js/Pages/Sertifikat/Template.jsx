@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { UploadCloud } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
 const fontOptions = [
     'Luxurious Script',
@@ -23,16 +23,25 @@ const fieldConfigs = [
     { key: 'nama', label: 'Nama Peserta', value: 'Nama Peserta Contoh' },
     { key: 'asal', label: 'Asal Sekolah', value: 'SMKN 1 Karawang' },
     { key: 'periode', label: 'Periode PKL', value: '01 Januari 2026 - 28 Februari 2026' },
-    { key: 'tanggal', label: 'Tanggal Tanda Tangan', value: 'Karawang, 28 Februari 2026' },
+    { key: 'tanggal', label: 'Tanggal Tanda Tangan', value: '28 Februari 2026' },
 ];
 
 const HEX_PATTERN = /^#([0-9A-Fa-f]{6})$/;
 
-const alignmentTransform = (align) => (
-    align === 'center' ? 'translate(-50%, -50%)'
-        : align === 'right' ? 'translate(-100%, -50%)'
-            : 'translate(0, -50%)'
+const fieldLeft = (x, lebarMax, alignment) => (
+    alignment === 'center' ? x - lebarMax / 2
+        : alignment === 'right' ? x - lebarMax
+            : x
 );
+
+/*
+ * Lebar halaman PDF (pt) — harus sama dengan backend ($pageWidth di
+ * SertifikatController). Font template disimpan dalam px (96 DPI); supaya
+ * ukuran teks relatif terhadap gambar PERSIS sama antara preview dan PDF,
+ * font diskalakan terhadap lebar container.
+ */
+const PDF_PAGE_WIDTH_PT = 1152;
+const REFERENCE_WIDTH_PX = PDF_PAGE_WIDTH_PT * (96 / 72); // 1536
 
 export default function Template({ template }) {
     const initialData = template ? { ...defaultPositions, ...template, template: null } : { ...defaultPositions, template: null };
@@ -41,6 +50,7 @@ export default function Template({ template }) {
     const [usePreviousSettings, setUsePreviousSettings] = useState(Boolean(template));
     const [draggingField, setDraggingField] = useState(null);
     const [hexErrors, setHexErrors] = useState({});
+    const [fontScale, setFontScale] = useState(1);
     const previewRef = useRef(null);
 
     const activeTemplate = useMemo(() => previewUrl || (template ? `/storage/${template.file_path}` : ''), [previewUrl, template]);
@@ -88,6 +98,20 @@ export default function Template({ template }) {
             window.removeEventListener('pointerup', handleUp);
         };
     }, [draggingField]);
+
+    // Skalakan font preview mengikuti lebar container agar ukurannya relatif sama dengan PDF
+    useEffect(() => {
+        const el = previewRef.current;
+        if (!el) return undefined;
+
+        const update = () => setFontScale(el.clientWidth / REFERENCE_WIDTH_PX);
+        update();
+
+        const observer = new ResizeObserver(update);
+        observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [activeTemplate]);
 
     const handleFile = (file) => {
         if (!file) return;
@@ -157,11 +181,7 @@ export default function Template({ template }) {
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ label: 'Kelola Template Sertifikat' }]}>
-            <Head title="Kelola Template Sertifikat">
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-                <link href="https://fonts.googleapis.com/css2?family=Luxurious+Script&display=swap" rel="stylesheet" />
-            </Head>
+            <Head title="Kelola Template Sertifikat" />
 
             <div className="space-y-6">
                 <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
@@ -187,7 +207,7 @@ export default function Template({ template }) {
                         <div className="mt-5 rounded-[24px] border border-dashed border-[#C9D3E0] bg-[#F7F9FC] p-4">
                             {activeTemplate ? (
                                 <div ref={previewRef} className="relative overflow-hidden rounded-[20px] border border-[#E4E9F0] bg-white">
-                                    <img src={activeTemplate} alt="Template sertifikat" className="block w-full select-none object-cover" />
+                                    <img src={activeTemplate} alt="Template sertifikat" className="block w-full select-none" />
 
                                     {fieldConfigs.map((field) => {
                                         const positionX = Number(form.data[`${field.key}_x`]) || 0;
@@ -199,20 +219,19 @@ export default function Template({ template }) {
                                         const color = form.data[`${field.key}_color`] || '#1B2733';
 
                                         return (
-                                            <div key={field.key} className="pointer-events-none absolute" style={{ left: `${positionX}%`, top: `${positionY}%`, transform: alignmentTransform(alignment) }}>
-                                                <div className="rounded-full border border-[#1B63B0] bg-white px-3 py-1 text-[11px] font-bold text-[#1B63B0] shadow-lg">
-                                                    {field.label}
-                                                </div>
+                                            <Fragment key={field.key}>
                                                 <div
-                                                    className="mt-1 font-semibold"
+                                                    className="pointer-events-none absolute"
                                                     style={{
-                                                        maxWidth: `${lebarMax}%`,
-                                                        width: 'auto',
-                                                        fontSize: `${fontSize}px`,
+                                                        left: `${fieldLeft(positionX, lebarMax, alignment)}%`,
+                                                        top: `${positionY}%`,
+                                                        width: `${lebarMax}%`,
+                                                        marginTop: '-0.55em',
+                                                        fontSize: `${fontSize * fontScale}px`,
                                                         lineHeight: 1.15,
                                                         textAlign: alignment,
                                                         color,
-                                                        fontFamily,
+                                                        fontFamily: `"${fontFamily}", "DejaVu Sans", sans-serif`,
                                                         boxSizing: 'border-box',
                                                         overflowWrap: 'break-word',
                                                         wordBreak: 'break-word',
@@ -221,7 +240,13 @@ export default function Template({ template }) {
                                                 >
                                                     {field.value}
                                                 </div>
-                                            </div>
+                                                <div
+                                                    className="pointer-events-none absolute rounded-full border border-[#1B63B0] bg-white px-3 py-1 text-[11px] font-bold text-[#1B63B0] shadow-lg"
+                                                    style={{ left: `${positionX}%`, top: `${positionY}%`, transform: 'translate(-50%, calc(-100% - 8px))' }}
+                                                >
+                                                    {field.label}
+                                                </div>
+                                            </Fragment>
                                         );
                                     })}
 
@@ -231,7 +256,7 @@ export default function Template({ template }) {
                                             type="button"
                                             onPointerDown={() => setDraggingField(field.key)}
                                             className="pointer-events-auto absolute h-5 w-5 rounded-full border-2 border-white bg-[#1B63B0] shadow-[0_4px_12px_rgba(27,99,176,0.5)]"
-                                            style={{ left: `${form.data[`${field.key}_x`]}%`, top: `${form.data[`${field.key}_y`]}%`, transform: 'translate(-50%, -50%)' }}
+                                            style={{ left: `${form.data[`${field.key}_x`]}%`, top: `${form.data[`${field.key}_y`]}%`, marginLeft: '-10px', marginTop: '-10px' }}
                                             aria-label={`Geser posisi ${field.label}`}
                                         />
                                     ))}
