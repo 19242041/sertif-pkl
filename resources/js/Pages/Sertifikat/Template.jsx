@@ -16,6 +16,8 @@ const defaultPositions = {
     nomor_x: 50, nomor_y: 20, nomor_font_size: 14, nomor_font_family: 'Times New Roman', nomor_color: '#111176', nomor_alignment: 'center', nomor_lebar_max: 65,
     periode_x: 50, periode_y: 55, periode_font_size: 19, periode_font_family: 'Times New Roman', periode_color: '#111176', periode_alignment: 'center', periode_lebar_max: 65,
     tanggal_x: 50, tanggal_y: 78, tanggal_font_size: 13, tanggal_font_family: 'Times New Roman', tanggal_color: '#111176', tanggal_alignment: 'center', tanggal_lebar_max: 55,
+    ttd_nama_x: 50, ttd_nama_y: 85, ttd_nama_font_size: 14, ttd_nama_font_family: 'Times New Roman', ttd_nama_color: '#111176', ttd_nama_alignment: 'center', ttd_nama_lebar_max: 55,
+    nip_x: 50, nip_y: 90, nip_font_size: 14, nip_font_family: 'Times New Roman', nip_color: '#111176', nip_alignment: 'center', nip_lebar_max: 55,
 };
 
 const fieldConfigs = [
@@ -24,6 +26,8 @@ const fieldConfigs = [
     { key: 'asal', label: 'Asal Sekolah', value: 'SMKN 1 Karawang' },
     { key: 'periode', label: 'Periode PKL', value: '01 Januari 2026 - 28 Februari 2026' },
     { key: 'tanggal', label: 'Tanggal Tanda Tangan', value: '28 Februari 2026' },
+    { key: 'ttd_nama', label: 'Nama Penandatangan', value: 'Nama Kepala UPTD' },
+    { key: 'nip', label: 'NIP', value: '196501011990031001' },
 ];
 
 const HEX_PATTERN = /^#([0-9A-Fa-f]{6})$/;

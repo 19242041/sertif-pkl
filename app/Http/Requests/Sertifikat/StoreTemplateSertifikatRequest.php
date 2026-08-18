@@ -106,6 +106,40 @@ class StoreTemplateSertifikatRequest extends FormRequest
                 'required',
                 'regex:/^#[0-9A-Fa-f]{6}$/',
             ],
+
+            // =========================
+            // NAMA PENANDATANGAN / KEPALA UPTD
+            // =========================
+            'ttd_nama_x' => ['required', 'numeric'],
+            'ttd_nama_y' => ['required', 'numeric'],
+            'ttd_nama_font_size' => ['required', 'numeric'],
+            'ttd_nama_font_family' => [
+                'required',
+                'in:Luxurious Script,Times New Roman,DejaVu Sans,Arial',
+            ],
+            'ttd_nama_alignment' => ['required', 'in:left,center,right'],
+            'ttd_nama_lebar_max' => ['required', 'numeric'],
+            'ttd_nama_color' => [
+                'required',
+                'regex:/^#[0-9A-Fa-f]{6}$/',
+            ],
+
+            // =========================
+            // NIP
+            // =========================
+            'nip_x' => ['required', 'numeric'],
+            'nip_y' => ['required', 'numeric'],
+            'nip_font_size' => ['required', 'numeric'],
+            'nip_font_family' => [
+                'required',
+                'in:Luxurious Script,Times New Roman,DejaVu Sans,Arial',
+            ],
+            'nip_alignment' => ['required', 'in:left,center,right'],
+            'nip_lebar_max' => ['required', 'numeric'],
+            'nip_color' => [
+                'required',
+                'regex:/^#[0-9A-Fa-f]{6}$/',
+            ],
         ];
     }
 
@@ -135,6 +169,14 @@ class StoreTemplateSertifikatRequest extends FormRequest
             'periode_font_family.in' => 'Font Periode PKL tidak valid.',
 
             'tanggal_font_family.in' => 'Font Tanggal Tanda Tangan tidak valid.',
+
+            'ttd_nama_color.regex' => 'Kode warna Nama Penandatangan harus format #RRGGBB.',
+
+            'nip_color.regex' => 'Kode warna NIP harus format #RRGGBB.',
+
+            'ttd_nama_font_family.in' => 'Font Nama Penandatangan tidak valid.',
+
+            'nip_font_family.in' => 'Font NIP tidak valid.',
         ];
     }
 }

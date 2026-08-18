@@ -40,6 +40,8 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
         tanggal_mulai_pkl: '',
         tanggal_selesai_pkl: '',
         tanggal_tanda_tangan: '',
+        ttd_nama: '',
+        nip: '',
     });
 
     const previewRef = useRef(null);
@@ -185,6 +187,26 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
             fontFamily: template.tanggal_font_family,
             fontSize: template.tanggal_font_size,
         },
+        {
+            key: 'ttd_nama',
+            value: form.data.ttd_nama,
+            x: template.ttd_nama_x, y: template.ttd_nama_y,
+            lebar: template.ttd_nama_lebar_max,
+            align: template.ttd_nama_alignment,
+            color: template.ttd_nama_color,
+            fontFamily: template.ttd_nama_font_family,
+            fontSize: template.ttd_nama_font_size,
+        },
+        {
+            key: 'nip',
+            value: form.data.nip,
+            x: template.nip_x, y: template.nip_y,
+            lebar: template.nip_lebar_max,
+            align: template.nip_alignment,
+            color: template.nip_color,
+            fontFamily: template.nip_font_family,
+            fontSize: template.nip_font_size,
+        },
     ].filter((field) => field.value) : [];
 
     return (
@@ -244,6 +266,18 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                 <span className="mb-2 block text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#1B2733]">Tanggal Selesai PKL</span>
                                 <input type="date" value={form.data.tanggal_selesai_pkl} onChange={(e) => form.setData('tanggal_selesai_pkl', e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
                                 {form.errors.tanggal_selesai_pkl && <p className="mt-1.5 text-[12.5px] font-medium text-[#C0433D]">{form.errors.tanggal_selesai_pkl}</p>}
+                            </label>
+
+                            <label className="block">
+                                <span className="mb-2 block text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#1B2733]">Nama Penandatangan</span>
+                                <input value={form.data.ttd_nama} onChange={(e) => form.setData('ttd_nama', e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
+                                {form.errors.ttd_nama && <p className="mt-1.5 text-[12.5px] font-medium text-[#C0433D]">{form.errors.ttd_nama}</p>}
+                            </label>
+
+                            <label className="block">
+                                <span className="mb-2 block text-[12.5px] font-bold uppercase tracking-[0.08em] text-[#1B2733]">NIP</span>
+                                <input type="number" value={form.data.nip} onChange={(e) => form.setData('nip', e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13.5px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
+                                {form.errors.nip && <p className="mt-1.5 text-[12.5px] font-medium text-[#C0433D]">{form.errors.nip}</p>}
                             </label>
                         </div>
 

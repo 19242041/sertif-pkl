@@ -107,6 +107,9 @@ class SertifikatController extends Controller
 
         $teksTanggal = $this->formatTanggalIndonesia($tanggalTandaTangan);
 
+        $ttdNamaText = $request->string('ttd_nama')->toString();
+        $nipText = $request->string('nip')->toString();
+
         /*
          * Ukuran font memakai nilai yang sudah diatur admin di halaman
          * "Kelola Sertifikat" (ukuran, posisi, warna, alignment sesuai
@@ -119,6 +122,8 @@ class SertifikatController extends Controller
             'asal' => (int) round((float) $template->asal_font_size),
             'periode' => (int) round((float) $template->periode_font_size),
             'tanggal' => (int) round((float) $template->tanggal_font_size),
+            'ttd_nama' => (int) round((float) $template->ttd_nama_font_size),
+            'nip' => (int) round((float) $template->nip_font_size),
         ];
 
         /*
@@ -160,6 +165,8 @@ class SertifikatController extends Controller
             'asal' => $template->asal_color,
             'periode' => $template->periode_color,
             'tanggal' => $template->tanggal_color,
+            'ttd_nama' => $template->ttd_nama_color,
+            'nip' => $template->nip_color,
         ];
 
         $texts = [
@@ -168,6 +175,8 @@ class SertifikatController extends Controller
             'asal' => $teksAsal,
             'periode' => $teksPeriode,
             'tanggal' => $teksTanggal,
+            'ttd_nama' => $ttdNamaText,
+            'nip' => $nipText,
         ];
 
         $fields = $this->computeFieldPositions(
@@ -452,6 +461,8 @@ class SertifikatController extends Controller
             $template->nomor_font_family,
             $template->periode_font_family,
             $template->tanggal_font_family,
+            $template->ttd_nama_font_family,
+            $template->nip_font_family,
         ]));
 
         foreach ($families as $family) {
@@ -597,6 +608,20 @@ class SertifikatController extends Controller
             'tanggal_color' => $template->tanggal_color,
             'tanggal_font_family' => $template->tanggal_font_family,
             'tanggal_font_size' => $template->tanggal_font_size,
+            'ttd_nama_x' => $template->ttd_nama_x,
+            'ttd_nama_y' => $template->ttd_nama_y,
+            'ttd_nama_alignment' => $template->ttd_nama_alignment,
+            'ttd_nama_lebar_max' => $template->ttd_nama_lebar_max,
+            'ttd_nama_color' => $template->ttd_nama_color,
+            'ttd_nama_font_family' => $template->ttd_nama_font_family,
+            'ttd_nama_font_size' => $template->ttd_nama_font_size,
+            'nip_x' => $template->nip_x,
+            'nip_y' => $template->nip_y,
+            'nip_alignment' => $template->nip_alignment,
+            'nip_lebar_max' => $template->nip_lebar_max,
+            'nip_color' => $template->nip_color,
+            'nip_font_family' => $template->nip_font_family,
+            'nip_font_size' => $template->nip_font_size,
         ];
     }
 }

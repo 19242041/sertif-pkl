@@ -59,6 +59,24 @@ class TemplateSertifikat extends Model
         'tanggal_lebar_max',
         'tanggal_color',
 
+        // Nama Penandatangan / Kepala UPTD
+        'ttd_nama_x',
+        'ttd_nama_y',
+        'ttd_nama_font_size',
+        'ttd_nama_font_family',
+        'ttd_nama_alignment',
+        'ttd_nama_lebar_max',
+        'ttd_nama_color',
+
+        // NIP
+        'nip_x',
+        'nip_y',
+        'nip_font_size',
+        'nip_font_family',
+        'nip_alignment',
+        'nip_lebar_max',
+        'nip_color',
+
         'is_active',
     ];
 
@@ -89,6 +107,16 @@ class TemplateSertifikat extends Model
             'tanggal_y' => 'float',
             'tanggal_font_size' => 'float',
             'tanggal_lebar_max' => 'float',
+
+            'ttd_nama_x' => 'float',
+            'ttd_nama_y' => 'float',
+            'ttd_nama_font_size' => 'float',
+            'ttd_nama_lebar_max' => 'float',
+
+            'nip_x' => 'float',
+            'nip_y' => 'float',
+            'nip_font_size' => 'float',
+            'nip_lebar_max' => 'float',
 
             'is_active' => 'boolean',
         ];

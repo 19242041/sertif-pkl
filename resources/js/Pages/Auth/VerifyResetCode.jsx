@@ -86,7 +86,7 @@ export default function VerifyResetCode({ email = '', status, resendAvailableIn 
     };
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#0E2A47_0%,#081B30_100%)] px-4 py-6 text-[#1B2733] sm:px-6 lg:px-8">
+        <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#0E2A47_0%,#081B30_100%)] px-4 py-6 text-[#FFFFFF] sm:px-6 lg:px-8">
             <Head title="Verifikasi Kode" />
 
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -123,11 +123,11 @@ export default function VerifyResetCode({ email = '', status, resendAvailableIn 
                                 <span className="flex-1 bg-[#E8A712]" />
                             </div>
 
-                            <h2 className="font-display mt-4 text-[24px] font-extrabold tracking-[0.02em] text-[#0E2A47]">
+                            <h2 className="font-display mt-4 text-[24px] font-extrabold tracking-[0.02em] text-[#FFFFFF]">
                                 Verifikasi Kode
                             </h2>
-                            <p className="mt-1.5 max-w-xs text-[13px] leading-5 text-[#657085]">
-                                Kode dikirim ke <span className="font-semibold text-[#1B2733]">{email || '-'}</span>
+                            <p className="mt-1.5 max-w-xs text-[13px] leading-5 text-[#FFFFFF]">
+                                Kode dikirim ke email yang terdaftar <span className="font-semibold text-[#1B2733]">{email || '-'}</span>
                             </p>
                         </div>
 

@@ -52,7 +52,7 @@ export default function ForgotPassword({ status }) {
                             <h2 className="font-display mt-4 text-[24px] font-extrabold tracking-[0.02em] text-[#FFFFFF]">
                                 Kirim Kode Reset
                             </h2>
-                            <p className="mt-1.5 max-w-xs text-[13px] leading-5 text-[#657085]">
+                            <p className="mt-1.5 max-w-xs text-[13px] leading-5 text-[#FFFFFF]">
                                 Masukkan email admin untuk menerima kode reset 6 digit.
                             </p>
                         </div>
@@ -92,10 +92,6 @@ export default function ForgotPassword({ status }) {
                                 Kembali ke login
                             </Link>
                         </form>
-
-                        <p className="mt-6 text-center text-[11.5px] leading-5 text-[#94A0B3]">
-                            Kode berlaku 10 menit dan hanya bisa dipakai sekali.
-                        </p>
                     </div>
                 </div>
             </div>
