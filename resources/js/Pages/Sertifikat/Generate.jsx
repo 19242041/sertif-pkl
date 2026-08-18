@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Download, FileText, FileUp } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Download, FileText, FileUp, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const fieldLeft = (x, lebarMax, alignment) => (
@@ -116,6 +116,16 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                 tanggal_mulai_pkl: peserta?.tanggal_mulai ?? '',
                 tanggal_selesai_pkl: peserta?.tanggal_selesai ?? '',
             };
+        });
+    };
+
+    const handleDelete = (id) => {
+        if (!window.confirm('Apakah Anda yakin ingin menghapus sertifikat ini?')) {
+            return;
+        }
+
+        router.delete(route('sertifikat.destroy', id), {
+            preserveScroll: true,
         });
     };
 
@@ -326,10 +336,16 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
                                                 <td className="px-4 py-4 text-[13px] text-[#1B2733]">{item.tanggal_sertifikat}</td>
                                                 <td className="px-4 py-4"><FileText className="h-5 w-5 text-[#1B63B0]" /></td>
                                                 <td className="px-4 py-4">
-                                                    <a href={route('sertifikat.download', item.id)} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E4E9F0] px-3.5 py-2 text-[13px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]">
-                                                        <Download className="h-4 w-4" />
-                                                        Unduh
-                                                    </a>
+                                                    <div className="flex items-center gap-2">
+                                                        <a href={route('sertifikat.download', item.id)} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E4E9F0] px-3.5 py-2 text-[13px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]">
+                                                            <Download className="h-4 w-4" />
+                                                            Unduh
+                                                        </a>
+                                                        <button type="button" onClick={() => handleDelete(item.id)} className="inline-flex items-center gap-2 rounded-[10px] border border-[#FBEAE9] bg-[#FFF5F5] px-3.5 py-2 text-[13px] font-semibold text-[#C0433D] transition hover:bg-[#FBEAE9]">
+                                                            <Trash2 className="h-4 w-4" />
+                                                            Hapus
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
