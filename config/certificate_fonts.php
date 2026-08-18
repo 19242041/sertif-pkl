@@ -25,11 +25,19 @@ return [
     'Luxurious Script' => [
         'regular' => storage_path('fonts/LuxuriousScript-Regular.ttf'),
         'bold' => null,
+        'sources' => [
+            'regular' => 'https://raw.githubusercontent.com/google/fonts/main/ofl/luxuriousscript/LuxuriousScript-Regular.ttf',
+            'bold' => null,
+        ],
     ],
 
     'Times New Roman' => [
         'regular' => storage_path('fonts/Tinos-Regular.ttf'),
         'bold' => storage_path('fonts/Tinos-Bold.ttf'),
+        'sources' => [
+            'regular' => 'https://raw.githubusercontent.com/google/fonts/main/ofl/tinos/Tinos-Regular.ttf',
+            'bold' => 'https://raw.githubusercontent.com/google/fonts/main/ofl/tinos/Tinos-Bold.ttf',
+        ],
     ],
 
 ];

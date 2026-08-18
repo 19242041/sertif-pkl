@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -62,6 +63,8 @@ class SertifikatController extends Controller
 
     public function template(): Response
     {
+        $this->ensureCertificateFonts();
+
         $template = TemplateSertifikat::query()->where('is_active', true)->latest()->first();
 
         return Inertia::render('Sertifikat/Template', [
@@ -69,12 +72,18 @@ class SertifikatController extends Controller
         ]);
     }
 
-    public function store(StoreGeneratedSertifikatRequest $request): RedirectResponse
+    public function store(StoreGeneratedSertifikatRequest $request): \Symfony\Component\HttpFoundation\Response
     {
         $template = TemplateSertifikat::query()
             ->where('is_active', true)
             ->latest()
             ->firstOrFail();
+
+        /*
+         * Pastikan font kustom sudah tersedia di lokal (unduh kalau belum ada
+         * dan bersihkan duplikat) sebelum PDF dirender.
+         */
+        $this->ensureCertificateFonts();
 
         $peserta = PesertaPkl::query()
             ->findOrFail($request->integer('peserta_pkl_id'));
@@ -122,11 +131,11 @@ class SertifikatController extends Controller
         );
 
         if (! file_exists($templateImagePath)) {
-            return redirect()
-                ->back()
-                ->withErrors([
+            return response()->json([
+                'errors' => [
                     'template' => 'File template tidak ditemukan: '.$template->file_path,
-                ]);
+                ],
+            ], 422);
         }
 
         /*
@@ -211,9 +220,11 @@ class SertifikatController extends Controller
             .str()->uuid()
             .'.pdf';
 
+        $output = $pdf->output();
+
         Storage::disk('public')->put(
             $filePath,
-            $pdf->output()
+            $output
         );
 
         Sertifikat::create([
@@ -226,11 +237,16 @@ class SertifikatController extends Controller
             'generated_at' => now(),
         ]);
 
-        $status = 'Sertifikat berhasil digenerate.';
+        /*
+         * Kembalikan PDF langsung sebagai attachment supaya browser otomatis
+         * mengunduhnya ke perangkat pengguna.
+         */
+        $filename = 'sertifikat-'.str()->slug($teksNama).'.pdf';
 
-        return redirect()
-            ->route('sertifikat.index')
-            ->with('status', $status);
+        return response($output, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 
     public function storeTemplate(StoreTemplateSertifikatRequest $request): RedirectResponse
@@ -313,6 +329,99 @@ class SertifikatController extends Controller
         $sertifikat->delete();
 
         return redirect()->route('sertifikat.index')->with('status', 'Sertifikat berhasil dihapus.');
+    }
+
+    /*
+     * Pastikan semua font kustom (lihat config/certificate_fonts.php) tersedia
+     * secara fisik di storage/fonts. Font yang belum ada akan diunduh otomatis
+     * dari URL sumbernya, lalu dibersihkan dari file duplikat.
+     */
+    private function ensureCertificateFonts(): void
+    {
+        $fontConfig = config('certificate_fonts', []);
+
+        foreach ($fontConfig as $font) {
+            $sources = $font['sources'] ?? [];
+
+            foreach (['regular', 'bold'] as $weight) {
+                $path = $font[$weight] ?? null;
+                $source = $sources[$weight] ?? null;
+
+                if (! $path || ! $source) {
+                    continue;
+                }
+
+                if (! file_exists($path)) {
+                    $this->downloadFontFile($source, $path);
+                }
+            }
+        }
+
+        $this->cleanupDuplicateFonts();
+    }
+
+    /*
+     * Unduh file font dari URL sumber ke path lokal. Kalau unduhan gagal,
+     * path lokal dibiarkan kosong (fallback font bawaan DomPDF yang dipakai).
+     */
+    private function downloadFontFile(string $source, string $destination): bool
+    {
+        try {
+            $response = Http::timeout(30)->get($source);
+
+            if (! $response->successful()) {
+                return false;
+            }
+
+            $contents = $response->body();
+
+            // Validasi minimal: pastikan ini file font (bukan halaman error).
+            if ($contents === '' || str_starts_with($contents, '<')) {
+                return false;
+            }
+
+            $dir = dirname($destination);
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            return file_put_contents($destination, $contents) !== false;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /*
+     * Bersihkan file font duplikat di storage/fonts, mis. "FontName (1).ttf".
+     * Sisakan satu file utama saja.
+     */
+    private function cleanupDuplicateFonts(): void
+    {
+        $fontDir = storage_path('fonts');
+
+        if (! is_dir($fontDir)) {
+            return;
+        }
+
+        $files = glob($fontDir.'/*.{ttf,woff,woff2,otf}', GLOB_BRACE) ?: [];
+
+        foreach ($files as $file) {
+            $name = basename($file);
+
+            // Hanya file dengan pola duplikat "Nama (1).ttf".
+            if (! preg_match('/^(.*?)\s+\(\d+\)\.(ttf|woff|woff2|otf)$/i', $name, $matches)) {
+                continue;
+            }
+
+            $mainName = $matches[1].'.'.$matches[2];
+            $mainFile = $fontDir.'/'.$mainName;
+
+            if (file_exists($mainFile)) {
+                @unlink($file);
+            } elseif (! file_exists($mainFile)) {
+                @rename($file, $mainFile);
+            }
+        }
     }
 
     /*

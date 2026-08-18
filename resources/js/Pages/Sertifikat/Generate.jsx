@@ -59,13 +59,49 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
         return () => observer.disconnect();
     }, [template]);
 
-    const submit = (event) => {
+    const submit = async (event) => {
         event.preventDefault();
 
-        form.post(route('sertifikat.store'), {
-            preserveScroll: true,
-            onSuccess: () => form.reset(),
-        });
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        try {
+            const response = await fetch(route('sertifikat.store'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify(form.data),
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+
+                if (data.errors) {
+                    Object.entries(data.errors).forEach(([key, value]) => {
+                        form.setError(key, Array.isArray(value) ? value[0] : value);
+                    });
+                }
+
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'sertifikat.pdf';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            form.reset();
+        } catch (error) {
+            // Abaikan error jaringan; biarkan pengguna mencoba lagi.
+        }
     };
 
     const selectedPeserta = pesertaOptions.find((item) => String(item.id) === String(form.data.peserta_pkl_id));
