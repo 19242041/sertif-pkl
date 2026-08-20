@@ -160,7 +160,7 @@ export default function Index({ summary, peserta = [], filters = {} }) {
                         <h3 className="text-xs font-bold text-slate-800">Detail Data Peserta</h3>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs text-slate-600">
+                        <table className="min-w-full text-left text-xs text-slate-600">
                             <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                 <tr>
                                     <th className="px-4 py-3">Peserta</th>

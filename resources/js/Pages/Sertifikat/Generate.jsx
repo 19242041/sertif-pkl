@@ -222,12 +222,12 @@ export default function Generate({ pesertaOptions, sertifikats, template }) {
 
                 <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                     <form onSubmit={submit} className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A0B3]">Form Generate</p>
                                 <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Isi data sertifikat</h2>
                             </div>
-                            <button type="submit" disabled={form.processing} className="rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50">
+                            <button type="submit" disabled={form.processing} className="inline-flex items-center justify-center rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50 sm:w-auto">
                                 Generate Sertifikat
                             </button>
                         </div>

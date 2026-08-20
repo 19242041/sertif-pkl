@@ -30,17 +30,17 @@ export default function Show({ peserta }) {
 
             <div className="space-y-4">
                 {/* Top Action Bar */}
-                <div className="flex items-center justify-between rounded-[18px] border border-[#E4E9F0] bg-white p-3.5 shadow-[0_10px_24px_rgba(8,27,48,0.05)]">
+                <div className="flex flex-col gap-3 rounded-[18px] border border-[#E4E9F0] bg-white p-3.5 shadow-[0_10px_24px_rgba(8,27,48,0.05)] sm:flex-row sm:items-center sm:justify-between">
                     <Link
                         href={route('peserta-pkl.index')}
-                        className="rounded-xl border border-[#E4E9F0] px-3.5 py-1.5 text-[12.5px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]"
+                        className="inline-flex items-center justify-center rounded-xl border border-[#E4E9F0] px-3.5 py-2 text-[12.5px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC] sm:w-auto"
                     >
                         Kembali
                     </Link>
                     <div className="flex gap-2">
                         <Link
                             href={route('peserta-pkl.edit', peserta.id)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#1B63B0] px-3.5 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-[#16579b]"
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#1B63B0] px-3.5 py-2 text-[12.5px] font-bold text-white transition hover:bg-[#16579b] sm:flex-none"
                         >
                             <PencilLine className="h-3.5 w-3.5" />
                             Edit
@@ -48,7 +48,7 @@ export default function Show({ peserta }) {
                         <button
                             type="button"
                             onClick={destroy}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#C0433D] px-3.5 py-1.5 text-[12.5px] font-bold text-white transition hover:bg-[#a83833]"
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#C0433D] px-3.5 py-2 text-[12.5px] font-bold text-white transition hover:bg-[#a83833] sm:flex-none"
                         >
                             <Trash2 className="h-3.5 w-3.5" />
                             Hapus

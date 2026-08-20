@@ -100,12 +100,12 @@ export default function Form({ peserta, mode }) {
             <Head title={mode === 'edit' ? 'Ubah Peserta' : 'Tambah Peserta'} />
 
             <div className="space-y-6">
-                <div className="flex items-center justify-between gap-4 rounded-[28px] border border-[#E4E9F0] bg-white p-5 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
-                    <Link href={route('peserta-pkl.index')} className="rounded-[10px] border border-[#E4E9F0] px-4 py-2.5 text-[13.5px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]">
+                <div className="flex flex-col gap-3 rounded-[28px] border border-[#E4E9F0] bg-white p-5 shadow-[0_18px_40px_rgba(8,27,48,0.06)] sm:flex-row sm:items-center sm:justify-between">
+                    <Link href={route('peserta-pkl.index')} className="inline-flex items-center justify-center rounded-[10px] border border-[#E4E9F0] px-4 py-2.5 text-[13.5px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC] md:w-auto">
                         Kembali
                     </Link>
 
-                    <button type="submit" form="peserta-form" className="rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50" disabled={form.processing}>
+                    <button type="submit" form="peserta-form" className="inline-flex items-center justify-center rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50 md:w-auto" disabled={form.processing}>
                         Simpan
                     </button>
                 </div>

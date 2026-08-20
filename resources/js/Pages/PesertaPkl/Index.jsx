@@ -66,7 +66,7 @@ export default function Index({ peserta, filters }) {
                         <p className="mt-1 text-[14px] text-[#657085]">Cari, filter, dan kelola data peserta secara cepat.</p>
                     </div>
 
-                    <Link href={route('peserta-pkl.create')} className="inline-flex items-center gap-2 rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b]">
+                    <Link href={route('peserta-pkl.create')} className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] lg:w-auto">
                         <Plus className="h-4 w-4" />
                         Tambah Peserta
                     </Link>
@@ -91,7 +91,7 @@ export default function Index({ peserta, filters }) {
                         <option value="Berhenti">Berhenti</option>
                     </select>
 
-                    <button type="submit" className="rounded-[10px] border border-[#E4E9F0] bg-[#F7F9FC] px-4 py-[10px] text-[13.5px] font-semibold text-[#1B2733] transition hover:bg-white">
+                    <button type="submit" className="rounded-[10px] border border-[#E4E9F0] bg-[#F7F9FC] px-4 py-[10px] text-[13.5px] font-semibold text-[#1B2733] transition hover:bg-white lg:w-auto">
                         Filter
                     </button>
                 </form>

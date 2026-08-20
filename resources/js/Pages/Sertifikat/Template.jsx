@@ -55,6 +55,7 @@ export default function Template({ template }) {
     const [draggingField, setDraggingField] = useState(null);
     const [hexErrors, setHexErrors] = useState({});
     const [fontScale, setFontScale] = useState(1);
+    const [isMobile, setIsMobile] = useState(false);
     const previewRef = useRef(null);
 
     const activeTemplate = useMemo(() => previewUrl || (template ? `/storage/${template.file_path}` : ''), [previewUrl, template]);
@@ -79,6 +80,22 @@ export default function Template({ template }) {
             }
         };
     }, [previewUrl]);
+
+    // Nonaktifkan drag-and-drop marker pada layar kecil (<768px) untuk
+    // mencegah misclick; pengaturan posisi diandalkan lewat input X/Y manual.
+    useEffect(() => {
+        const query = window.matchMedia('(max-width: 767px)');
+
+        const update = () => setIsMobile(query.matches);
+        update();
+
+        if (query.addEventListener) {
+            query.addEventListener('change', update);
+            return () => query.removeEventListener('change', update);
+        }
+
+        return undefined;
+    }, []);
 
     useEffect(() => {
         const handleMove = (event) => {
@@ -196,12 +213,15 @@ export default function Template({ template }) {
 
                 <form onSubmit={submit} className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
                     <div className="rounded-[28px] border border-[#E4E9F0] bg-white p-6 shadow-[0_18px_40px_rgba(8,27,48,0.06)]">
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A0B3]">Editor Visual</p>
                                 <h2 className="font-display mt-1 text-[18px] font-extrabold text-[#0E2A47]">Geser marker di atas template</h2>
+                                <p className="mt-1 text-[12.5px] text-[#657085] md:hidden">
+                                    Geser dinonaktifkan di layar kecil — atur posisi lewat input X/Y di bawah.
+                                </p>
                             </div>
-                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-[#E4E9F0] px-3.5 py-2 text-[13px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]">
+                            <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[#E4E9F0] px-3.5 py-2 text-[13px] font-semibold text-[#1B2733] transition hover:bg-[#F7F9FC]">
                                 <UploadCloud className="h-4 w-4 text-[#1B63B0]" />
                                 <span>Upload Template</span>
                                 <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
@@ -254,7 +274,7 @@ export default function Template({ template }) {
                                         );
                                     })}
 
-                                    {fieldConfigs.map((field) => (
+                                    {!isMobile && fieldConfigs.map((field) => (
                                         <button
                                             key={`${field.key}-handle`}
                                             type="button"
@@ -297,7 +317,7 @@ export default function Template({ template }) {
                                     <div key={field.key} className="rounded-[24px] border border-[#E4E9F0] bg-[#F7F9FC] p-4">
                                         <p className="text-[13px] font-bold text-[#0E2A47]">{field.label}</p>
 
-                                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                                             <label className="block">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">X %</span>
                                                 <input type="number" step="any" value={form.data[`${field.key}_x`]} onChange={(e) => form.setData(`${field.key}_x`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
@@ -318,11 +338,11 @@ export default function Template({ template }) {
                                                     ))}
                                                 </select>
                                             </label>
-                                            <label className="block sm:col-span-2">
+                                            <label className="block md:col-span-2">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Lebar Area Maksimal (%)</span>
                                                 <input type="number" step="any" value={form.data[`${field.key}_lebar_max`]} onChange={(e) => form.setData(`${field.key}_lebar_max`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12" />
                                             </label>
-                                            <label className="block sm:col-span-2">
+                                            <label className="block md:col-span-2">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Warna Teks</span>
                                                 <div className="flex items-center gap-2">
                                                     <input
@@ -346,7 +366,7 @@ export default function Template({ template }) {
                                                     </p>
                                                 )}
                                             </label>
-                                            <label className="block sm:col-span-2">
+                                            <label className="block md:col-span-2">
                                                 <span className="mb-1 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[#657085]">Perataan</span>
                                                 <select value={form.data[`${field.key}_alignment`]} onChange={(e) => form.setData(`${field.key}_alignment`, e.target.value)} className="block w-full rounded-[10px] border border-[#E4E9F0] bg-white px-3.5 py-[10px] text-[13px] outline-none focus:border-[#1B63B0] focus:ring-4 focus:ring-[#1B63B0]/12">
                                                     <option value="left">Kiri</option>
@@ -360,7 +380,7 @@ export default function Template({ template }) {
                             })}
                         </div>
 
-                        <button type="submit" disabled={form.processing} className="rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50">
+                        <button type="submit" disabled={form.processing} className="inline-flex w-full items-center justify-center rounded-[10px] bg-[#1B63B0] px-4 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-[#16579b] disabled:opacity-50 md:w-auto">
                             Simpan Template
                         </button>
                     </div>
